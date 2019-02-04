@@ -118,6 +118,9 @@
 
         static async void Bot_OnMessage(object sender, MessageEventArgs e) 
         {
+            try
+            {
+            Console.WriteLine(e.Message.Text);
             if (e.Message.Text == "/tablas")
             {
                 var text = GroupTableMessage("Grupo A", GroupA);
@@ -224,6 +227,12 @@
                     }
 
                 }
+            }
+            }
+            catch(Exception ex)
+            {
+                // fail silently 
+                Console.WriteLine($"There was an exception with exception e: {ex.Message}");
             }
         }
 
