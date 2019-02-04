@@ -120,114 +120,115 @@
         {
             try
             {
-            Console.WriteLine(e.Message.Text);
-            if (e.Message.Text == "/tablas")
-            {
-                var text = GroupTableMessage("Grupo A", GroupA);
-                Console.WriteLine($"Received a text message in chat {e.Message.Chat.Id}.");
+                Console.WriteLine(e.Message.Text);
+                
+                if (e.Message.Text == "/tablas")
+                {
+                    var text = GroupTableMessage("Grupo A", GroupA);
+                    Console.WriteLine($"Received a text message in chat {e.Message.Chat.Id}.");
 
-                var message1 = await botClient.SendTextMessageAsync(
-                    chatId: e.Message.Chat,
-                    text: text,
-                    parseMode: ParseMode.Markdown,
-                    disableNotification: true,
-                    replyToMessageId: e.Message.MessageId
-                );
+                    var message1 = await botClient.SendTextMessageAsync(
+                        chatId: e.Message.Chat,
+                        text: text,
+                        parseMode: ParseMode.Markdown,
+                        disableNotification: true,
+                        replyToMessageId: e.Message.MessageId
+                    );
 
-                var message2 = await botClient.SendTextMessageAsync(
-                    chatId: e.Message.Chat,
-                    text: GroupTableMessage("Grupo B", GroupB),
-                    parseMode: ParseMode.Markdown,
-                    disableNotification: true,
-                    replyToMessageId: e.Message.MessageId
-                );
-            }
-            else if(e.Message.Text != null && e.Message.Text.StartsWith("/marcador"))
-            {
-                var parameters = e.Message.Text.Split(' ');
-                if(parameters.Length != 5){
-                    var message = await botClient.SendTextMessageAsync(
-                    chatId: e.Message.Chat,
-                    text: "Marcador debe llevar: equipo goles equipo goles\nPor ejemplo: Atletico 1 Eibar 0",
-                    parseMode: ParseMode.Markdown,
-                    disableNotification: true,
-                    replyToMessageId: e.Message.MessageId
+                    var message2 = await botClient.SendTextMessageAsync(
+                        chatId: e.Message.Chat,
+                        text: GroupTableMessage("Grupo B", GroupB),
+                        parseMode: ParseMode.Markdown,
+                        disableNotification: true,
+                        replyToMessageId: e.Message.MessageId
                     );
                 }
-                else 
+                else if(e.Message.Text != null && e.Message.Text.StartsWith("/marcador"))
                 {
-                    var team1 = parameters[1];
-                    int goals1 = -1;
-                    int.TryParse(parameters[2], out goals1);
-                    var team2 = parameters[3];
-                    var goals2 = -1;
-                    int.TryParse(parameters[4], out goals2);
-
-
-                    var row1 = GroupA.FirstOrDefault(x => x.Team.StartsWith(team1) || x.Player.Contains(team1)) ?? 
-                               GroupB.FirstOrDefault(x => x.Team.StartsWith(team1) || x.Player.Contains(team1));
-                    var row2 = GroupA.FirstOrDefault(x => x.Team.StartsWith(team2) || x.Player.Contains(team2)) ?? 
-                               GroupB.FirstOrDefault(x => x.Team.StartsWith(team2) || x.Player.Contains(team2));
-
-                    if(row1 == null || row2 == null)
-                    {
+                    var parameters = e.Message.Text.Split(' ');
+                    if(parameters.Length != 5){
                         var message = await botClient.SendTextMessageAsync(
-                            chatId: e.Message.Chat,
-                            text: $"no encontré alguno de estos equipos: {team1}, {team2}",
-                            parseMode: ParseMode.Markdown,
-                            disableNotification: true,
-                            replyToMessageId: e.Message.MessageId);
+                        chatId: e.Message.Chat,
+                        text: "Marcador debe llevar: equipo goles equipo goles\nPor ejemplo: Atletico 1 Eibar 0",
+                        parseMode: ParseMode.Markdown,
+                        disableNotification: true,
+                        replyToMessageId: e.Message.MessageId
+                        );
                     }
-
-                    if(goals1 < 0 || goals2 < 0)
+                    else 
                     {
-                        var message = await botClient.SendTextMessageAsync(
-                            chatId: e.Message.Chat,
-                            text: $"Alguno de estos marcadores esta mamando: {parameters[2]}, {parameters[4]}",
-                            parseMode: ParseMode.Markdown,
-                            disableNotification: true,
-                            replyToMessageId: e.Message.MessageId);
-                    }
+                        var team1 = parameters[1];
+                        int goals1 = -1;
+                        int.TryParse(parameters[2], out goals1);
+                        var team2 = parameters[3];
+                        var goals2 = -1;
+                        int.TryParse(parameters[4], out goals2);
 
-                    // todo bien, todo correcto
-                    if(row1 != null && row2 != null && goals1 >= 0 && goals2 >= 0)
-                    {
-                            
-                        // ganó team 1.
-                        if(goals1 > goals2)
+
+                        var row1 = GroupA.FirstOrDefault(x => x.Team.StartsWith(team1) || x.Player.Contains(team1)) ?? 
+                                GroupB.FirstOrDefault(x => x.Team.StartsWith(team1) || x.Player.Contains(team1));
+                        var row2 = GroupA.FirstOrDefault(x => x.Team.StartsWith(team2) || x.Player.Contains(team2)) ?? 
+                                GroupB.FirstOrDefault(x => x.Team.StartsWith(team2) || x.Player.Contains(team2));
+
+                        if(row1 == null || row2 == null)
                         {
-                            row1.Won++;
-                            row2.Lost++;
-                        }
-                        else if(goals1 < goals2)
-                        {
-                            row1.Lost++;
-                            row2.Won++;
-                        }
-                        else
-                        {
-                            row1.Draw++;
-                            row2.Draw++;
+                            var message = await botClient.SendTextMessageAsync(
+                                chatId: e.Message.Chat,
+                                text: $"no encontré alguno de estos equipos: {team1}, {team2}",
+                                parseMode: ParseMode.Markdown,
+                                disableNotification: true,
+                                replyToMessageId: e.Message.MessageId);
                         }
 
-                        row1.GoalsInFavor += goals1;
-                        row1.GoalsAgainst += goals2;
-                        row2.GoalsInFavor += goals2;
-                        row2.GoalsAgainst += goals1;
+                        if(goals1 < 0 || goals2 < 0)
+                        {
+                            var message = await botClient.SendTextMessageAsync(
+                                chatId: e.Message.Chat,
+                                text: $"Alguno de estos marcadores esta mamando: {parameters[2]}, {parameters[4]}",
+                                parseMode: ParseMode.Markdown,
+                                disableNotification: true,
+                                replyToMessageId: e.Message.MessageId);
+                        }
 
-                        await System.IO.File.WriteAllLinesAsync("GroupA.csv", Csv(GroupA));
-                        await System.IO.File.WriteAllLinesAsync("GroupB.csv", Csv(GroupB));
+                        // todo bien, todo correcto
+                        if(row1 != null && row2 != null && goals1 >= 0 && goals2 >= 0)
+                        {
+                                
+                            // ganó team 1.
+                            if(goals1 > goals2)
+                            {
+                                row1.Won++;
+                                row2.Lost++;
+                            }
+                            else if(goals1 < goals2)
+                            {
+                                row1.Lost++;
+                                row2.Won++;
+                            }
+                            else
+                            {
+                                row1.Draw++;
+                                row2.Draw++;
+                            }
 
-                        var message = await botClient.SendTextMessageAsync(
-                            chatId: e.Message.Chat,
-                            text: $"Anotado!",
-                            parseMode: ParseMode.Markdown,
-                            disableNotification: true,
-                            replyToMessageId: e.Message.MessageId);
+                            row1.GoalsInFavor += goals1;
+                            row1.GoalsAgainst += goals2;
+                            row2.GoalsInFavor += goals2;
+                            row2.GoalsAgainst += goals1;
+
+                            await System.IO.File.WriteAllLinesAsync("GroupA.csv", Csv(GroupA));
+                            await System.IO.File.WriteAllLinesAsync("GroupB.csv", Csv(GroupB));
+
+                            var message = await botClient.SendTextMessageAsync(
+                                chatId: e.Message.Chat,
+                                text: $"Anotado!",
+                                parseMode: ParseMode.Markdown,
+                                disableNotification: true,
+                                replyToMessageId: e.Message.MessageId);
+                        }
+
                     }
-
                 }
-            }
             }
             catch(Exception ex)
             {
