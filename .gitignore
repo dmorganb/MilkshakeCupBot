@@ -1,5 +1,5 @@
-bin
-obj
+bin/
+obj/
 GroupA.1.csv
 GroupB.1.csv
 GroupA.csv

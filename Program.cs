@@ -22,8 +22,8 @@
 
         private static List<Row> GroupB { get; set; }
 
-        private class Row{
-
+        private class Row
+        {
             public string Player { get; set; }
             
             public string Team { get; set; }
@@ -44,11 +44,15 @@
 
             public int GoalDifference => GoalsInFavor - GoalsAgainst;
 
-            public Row()
+            public Row(
+                string player, 
+                string team, 
+                int won, 
+                int draw, 
+                int lost, 
+                int goalsInFavor, 
+                int goalsAgainst)
             {
-            }
-
-            public Row(string player, string team, int won, int draw, int lost, int goalsInFavor, int goalsAgainst){
                 Player = player;
                 Team = team;
                 Won = won;
@@ -65,38 +69,11 @@
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appSettings.json", optional: true, reloadOnChange: true);
-            IConfigurationRoot configuration = builder.Build();
+            var configuration = builder.Build();
             var token = configuration["token"];
 
-            var groupAFile = await System.IO.File.ReadAllLinesAsync("GroupA.csv");
-            GroupA = new List<Row>();
-            foreach(var line in groupAFile)
-            {
-                var fields = line.Split(',');
-                GroupA.Add(new Row(
-                    fields[0],
-                    fields[1],
-                    int.Parse(fields[2]),
-                    int.Parse(fields[3]),
-                    int.Parse(fields[4]),
-                    int.Parse(fields[5]),
-                    int.Parse(fields[6])));
-            }
-
-            var groupBFile = await System.IO.File.ReadAllLinesAsync("GroupB.csv");
-            GroupB = new List<Row>();
-            foreach(var line in groupBFile)
-            {
-                var fields = line.Split(',');
-                GroupB.Add(new Row(
-                    fields[0],
-                    fields[1],
-                    int.Parse(fields[2]),
-                    int.Parse(fields[3]),
-                    int.Parse(fields[4]),
-                    int.Parse(fields[5]),
-                    int.Parse(fields[6])));
-            }
+            GroupA = await ReadGroup("GroupA.csv");
+            GroupB = await ReadGroup("GroupB.csv");
 
             // bot client
             botClient = new TelegramBotClient(token);
@@ -109,14 +86,36 @@
             Console.WriteLine("Press esc to exit");
 
             ConsoleKeyInfo input;
+            
             do
             {
                 input = Console.ReadKey();
             }
-            while(input.Key != ConsoleKey.Escape);
+            while (input.Key != ConsoleKey.Escape);
         }
 
-        static async void Bot_OnMessage(object sender, MessageEventArgs e) 
+        private static async Task<List<Row>> ReadGroup(string file)
+        {
+            var fileLines = await System.IO.File.ReadAllLinesAsync(file);
+            var group = new List<Row>();
+
+            foreach (var line in fileLines)
+            {
+                var fields = line.Split(',');
+                group.Add(new Row(
+                    fields[0],
+                    fields[1],
+                    int.Parse(fields[2]),
+                    int.Parse(fields[3]),
+                    int.Parse(fields[4]),
+                    int.Parse(fields[5]),
+                    int.Parse(fields[6])));
+            }
+
+            return group;
+        }
+
+        private static async void Bot_OnMessage(object sender, MessageEventArgs e) 
         {
             try
             {
@@ -143,10 +142,12 @@
                         replyToMessageId: e.Message.MessageId
                     );
                 }
-                else if(e.Message.Text != null && e.Message.Text.StartsWith("/marcador"))
+                else if (e.Message.Text != null && e.Message.Text.StartsWith("/marcador"))
                 {
                     var parameters = e.Message.Text.Split(' ');
-                    if(parameters.Length != 5){
+                    
+                    if (parameters.Length != 5)
+                    {
                         var message = await botClient.SendTextMessageAsync(
                         chatId: e.Message.Chat,
                         text: "Marcador debe llevar: equipo goles equipo goles\nPor ejemplo: Atletico 1 Eibar 0",
@@ -158,7 +159,7 @@
                     else 
                     {
                         var team1 = parameters[1];
-                        int goals1 = -1;
+                        var goals1 = -1;
                         int.TryParse(parameters[2], out goals1);
                         var team2 = parameters[3];
                         var goals2 = -1;
@@ -170,7 +171,7 @@
                         var row2 = GroupA.FirstOrDefault(x => x.Team.StartsWith(team2) || x.Player.Contains(team2)) ?? 
                                 GroupB.FirstOrDefault(x => x.Team.StartsWith(team2) || x.Player.Contains(team2));
 
-                        if(row1 == null || row2 == null)
+                        if (row1 == null || row2 == null)
                         {
                             var message = await botClient.SendTextMessageAsync(
                                 chatId: e.Message.Chat,
@@ -180,7 +181,7 @@
                                 replyToMessageId: e.Message.MessageId);
                         }
 
-                        if(goals1 < 0 || goals2 < 0)
+                        if (goals1 < 0 || goals2 < 0)
                         {
                             var message = await botClient.SendTextMessageAsync(
                                 chatId: e.Message.Chat,
@@ -191,7 +192,7 @@
                         }
 
                         // todo bien, todo correcto
-                        if(row1 != null && row2 != null && goals1 >= 0 && goals2 >= 0)
+                        if (row1 != null && row2 != null && goals1 >= 0 && goals2 >= 0)
                         {
                                 
                             // ganó team 1.
@@ -241,7 +242,7 @@
         {
             var lines = new List<string>();
             
-            foreach(var row in group)
+            foreach (var row in group)
             {
                 lines.Add($"{row.Player},{row.Team},{row.Won},{row.Draw},{row.Lost},{row.GoalsInFavor},{row.GoalsAgainst}");
             }
@@ -252,21 +253,25 @@
         private static string GroupTableMessage(string title, List<Row> group) 
         {
             var text = title + "\n";
-            
             text += "```\n";
-            text += "Equipo|Pts| PJ| G| E| P| GF|GC|Dif\n";
-            text += "------+---+---+--+--+--+---+--+---\n";
+            text += "Equ|Pt| G| E| P|GF|GC|Dif\n";
+            text += "---+--+--+--+--+--+--+---\n";
 
-            foreach(var row in group.OrderByDescending(x => x.Points))
+            // This is important
+            var orderedGroup = group
+                .OrderByDescending(x => x.Points)
+                .ThenByDescending(x => x.GoalDifference)
+                .ThenByDescending(x => x.GoalsInFavor);
+
+            foreach (var row in orderedGroup)
             {
-                text += (row.Player.Length > 6? row.Player.Substring(0, 6) : row.Player.PadRight(6)) + "|";
-                text += $" {row.Points.ToString("00")}|";
-                text += $" {row.TotalGames.ToString("00")}|";
-                text += $"{row.Won.ToString("00")}|";
-                text += $"{row.Draw.ToString("00")}|";
-                text += $"{row.Lost.ToString("00")}|";
-                text += $" {row.GoalsInFavor.ToString("00")}|";
-                text += $"{row.GoalsAgainst.ToString("00")}|";
+                text += (row.Player.Length > 3? row.Player.Substring(0, 3) : row.Player.PadRight(3)) + "|";
+                text += $"{row.Points}".PadLeft(2) + "|";
+                text += $"{row.Won}".PadLeft(2) + "|";
+                text += $"{row.Draw}".PadLeft(2) + "|";
+                text += $"{row.Lost}".PadLeft(2) + "|";
+                text += $"{row.GoalsInFavor}".PadLeft(2) + "|";
+                text += $"{row.GoalsAgainst}".PadLeft(2) + "|";
                 text += $"{row.GoalDifference.ToString("00")}".PadLeft(3) + "\n";
             }
 
