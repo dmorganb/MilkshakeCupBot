@@ -126,7 +126,7 @@
                     return;
                 }
 
-                if (e.Message.Text.StartsWith("/tablas"))
+                if (e.Message.Text.StartsWith("/tabla"))
                 {
                     await TablasCommand(e);
                     return;
@@ -284,7 +284,7 @@
             var text = title + "\n";
             text += "```\n";
             text += "Equ|Pt| G| E| P|GF|GC|Dif\n";
-            text += "---+--+--+--+--+--+--+---\n";
+            text += "=========================\n";
 
             // This is important
             var orderedGroup = group
