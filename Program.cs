@@ -126,7 +126,7 @@
                     return;
                 }
 
-                if (e.Message.Text == "/tablas")
+                if (e.Message.Text.StartsWith("/tablas"))
                 {
                     await TablasCommand(e);
                     return;
@@ -146,22 +146,35 @@
 
         private static async Task TablasCommand(MessageEventArgs e)
         {
-            var text = GroupTableMessage("Grupo A", GroupA);
-            Console.WriteLine($"Received a text message in chat {e.Message.Chat.Id}.");
+            var parameters = e.Message.Text.Split(' ');
+            var selectedGroups = "ab";
 
-            var message1 = await botClient.SendTextMessageAsync(
-                chatId: e.Message.Chat,
-                text: text,
-                parseMode: ParseMode.Markdown,
-                disableNotification: true,
-                replyToMessageId: e.Message.MessageId);
+            if (parameters.Length > 1)
+            {
+                selectedGroups = parameters[1]?.ToLower();
+            }
 
-            var message2 = await botClient.SendTextMessageAsync(
-                chatId: e.Message.Chat,
-                text: GroupTableMessage("Grupo B", GroupB),
-                parseMode: ParseMode.Markdown,
-                disableNotification: true,
-                replyToMessageId: e.Message.MessageId);
+            selectedGroups = (selectedGroups == "a" || selectedGroups == "b") ? selectedGroups : "ab";
+
+            if (selectedGroups.Contains("a"))
+            {
+                var message1 = await botClient.SendTextMessageAsync(
+                    chatId: e.Message.Chat,
+                    text: GroupTableMessage("Grupo A", GroupA),
+                    parseMode: ParseMode.Markdown,
+                    disableNotification: true,
+                    replyToMessageId: e.Message.MessageId);
+            }
+
+            if (selectedGroups.Contains("b"))
+            {
+                var message2 = await botClient.SendTextMessageAsync(
+                    chatId: e.Message.Chat,
+                    text: GroupTableMessage("Grupo B", GroupB),
+                    parseMode: ParseMode.Markdown,
+                    disableNotification: true,
+                    replyToMessageId: e.Message.MessageId);
+            }
         }
 
 
