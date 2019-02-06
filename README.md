@@ -8,10 +8,10 @@ Commands:
 =========
 you can execute the following commands:
 
-/tablas <group> : returns the current standing for the group. <group> is optional. if not present or different than "a" or "b"
+/tablas {group} : returns the current standing for the group. <group> is optional. if not present or different than "a" or "b"
                   then it will return the standing for both groups. <group> is case insensitive.
 
-/marcador <teamOrPlayer1> <goalsScoredByTeamOrPlayer1> <teamOrPlayer2> <goalsScoredByTeamOrPlayer2> : Updates the standing of
+/marcador {teamOrPlayer1} {goalsScoredByTeamOrPlayer1} {teamOrPlayer2} {goalsScoredByTeamOrPlayer2} : Updates the standing of
                   standing of a group with the score of the match played. <teamOrPlayer> are case insensitive. Assumes that
                   both teamOrPlayer 1 and 2 are from the same group.
                   
