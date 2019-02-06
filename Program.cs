@@ -103,8 +103,8 @@
             {
                 var fields = line.Split(',');
                 group.Add(new Row(
-                    fields[0],
-                    fields[1],
+                    fields[0]?.ToLower(),
+                    fields[1]?.ToLower(),
                     int.Parse(fields[2]),
                     int.Parse(fields[3]),
                     int.Parse(fields[4]),
@@ -158,10 +158,10 @@
                     }
                     else 
                     {
-                        var team1 = parameters[1];
+                        var team1 = parameters[1]?.ToLower();
                         var goals1 = -1;
                         int.TryParse(parameters[2], out goals1);
-                        var team2 = parameters[3];
+                        var team2 = parameters[3]?.ToLower();
                         var goals2 = -1;
                         int.TryParse(parameters[4], out goals2);
 
@@ -272,7 +272,7 @@
                 text += $"{row.Lost}".PadLeft(2) + "|";
                 text += $"{row.GoalsInFavor}".PadLeft(2) + "|";
                 text += $"{row.GoalsAgainst}".PadLeft(2) + "|";
-                text += $"{row.GoalDifference.ToString("00")}".PadLeft(3) + "\n";
+                text += $"{row.GoalDifference}".PadLeft(3) + "\n";
             }
 
             text += "```";
