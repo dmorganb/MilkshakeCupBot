@@ -65,15 +65,6 @@
 
         public static async Task Main(string[] args)
         {
-            var value = "2*6";
-            var value2 = "1-3";
-
-            var could = int.TryParse(value, out var x);
-            var could2 = int.TryParse(value2, out var x2);
-
-            Console.WriteLine(could + " " + x);
-            Console.WriteLine(could2 + " " + x2);
-            
             // app settings
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
