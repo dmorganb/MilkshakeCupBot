@@ -65,6 +65,15 @@
 
         public static async Task Main(string[] args)
         {
+            var value = "2*6";
+            var value2 = "1-3";
+
+            var could = int.TryParse(value, out var x);
+            var could2 = int.TryParse(value2, out var x2);
+
+            Console.WriteLine(could + " " + x);
+            Console.WriteLine(could2 + " " + x2);
+            
             // app settings
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -177,7 +186,6 @@
             }
         }
 
-
         private static async Task MarcadorCommand(MessageEventArgs e)
         {
             var parameters = e.Message.Text.Split(' ');
@@ -187,7 +195,7 @@
                 var message = await botClient.SendTextMessageAsync(
                     chatId: e.Message.Chat,
                     text: "Marcador debe llevar: equipo goles equipo goles\nPor ejemplo: Atletico 1 Eibar 0",
-                    parseMode: ParseMode.Markdown,
+                    parseMode: ParseMode.Default,
                     disableNotification: true,
                     replyToMessageId: e.Message.MessageId);
             }
@@ -195,35 +203,89 @@
             {
                 var team1 = parameters[1]?.ToLower();
                 var goals1 = -1;
-                int.TryParse(parameters[2], out goals1);
                 var team2 = parameters[3]?.ToLower();
                 var goals2 = -1;
-                int.TryParse(parameters[4], out goals2);
 
+                if (!int.TryParse(parameters[2], out goals1))
+                {
+                    goals1 = -1;
+                }
+                
+                if(!int.TryParse(parameters[4], out goals2))
+                {
+                    goals2 = -1;
+                }
 
                 var row1 = GroupA.FirstOrDefault(x => x.Team.StartsWith(team1) || x.Player.Contains(team1)) ??
                         GroupB.FirstOrDefault(x => x.Team.StartsWith(team1) || x.Player.Contains(team1));
                 var row2 = GroupA.FirstOrDefault(x => x.Team.StartsWith(team2) || x.Player.Contains(team2)) ??
                         GroupB.FirstOrDefault(x => x.Team.StartsWith(team2) || x.Player.Contains(team2));
 
+                // row validations:
+
+                // 1) teams or players exist in a group.
                 if (row1 == null || row2 == null)
                 {
                     var message = await botClient.SendTextMessageAsync(
                         chatId: e.Message.Chat,
                         text: $"no encontré alguno de estos equipos: {team1}, {team2}",
-                        parseMode: ParseMode.Markdown,
+                        parseMode: ParseMode.Default,
                         disableNotification: true,
                         replyToMessageId: e.Message.MessageId);
+                    return;
                 }
 
+                // 2) teams or players are different.
+                if (row1 == row2)
+                {
+                    var message = await botClient.SendTextMessageAsync(
+                        chatId: e.Message.Chat,
+                        text: $"Diay, jugó solo?",
+                        parseMode: ParseMode.Default,
+                        disableNotification: true,
+                        replyToMessageId: e.Message.MessageId);
+                    return;
+                }
+
+                // 3) Teams belong to the same group.
+                if ((GroupA.Contains(row1) && !GroupA.Contains(row2)) ||
+                    (GroupB.Contains(row1) && !GroupB.Contains(row2)))
+                {
+                    var message = await botClient.SendTextMessageAsync(
+                        chatId: e.Message.Chat,
+                        text: $"Buen intento, pero solo acepto partidos de equipos del mismo grupo :P",
+                        parseMode: ParseMode.Default,
+                        disableNotification: true,
+                        replyToMessageId: e.Message.MessageId);
+                    return;
+                }
+
+                // score validations
+
+                // 1) goals reported are valid scores
                 if (goals1 < 0 || goals2 < 0)
                 {
                     var message = await botClient.SendTextMessageAsync(
                         chatId: e.Message.Chat,
                         text: $"Alguno de estos marcadores esta mamando: {parameters[2]}, {parameters[4]}",
-                        parseMode: ParseMode.Markdown,
+                        parseMode: ParseMode.Default,
                         disableNotification: true,
                         replyToMessageId: e.Message.MessageId);
+                    return;
+                }
+
+                const int goalsThreshold = 10; // if someone scored more than 10 in the same game, that's suspicious.
+                
+                // 2) no one scored more than 10 goals (possible but not probable)
+                if (goals1 > goalsThreshold || goals2 > goalsThreshold)
+                {
+                    var message = await botClient.SendTextMessageAsync(
+                        chatId: e.Message.Chat,
+                        text: $"Mejor vuelvan a jugarlo, pero esta vez con todos los controles encendidos",
+                        parseMode: ParseMode.Default,
+                        disableNotification: true,
+                        replyToMessageId: e.Message.MessageId);
+                    return;
                 }
 
                 // all parameters have valid values
@@ -259,7 +321,7 @@
                     var message = await botClient.SendTextMessageAsync(
                         chatId: e.Message.Chat,
                         text: $"Anotado!",
-                        parseMode: ParseMode.Markdown,
+                        parseMode: ParseMode.Default,
                         disableNotification: true,
                         replyToMessageId: e.Message.MessageId);
                 }
