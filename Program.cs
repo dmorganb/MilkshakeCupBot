@@ -22,6 +22,8 @@
 
         private static List<Row> GroupB { get; set; }
 
+        private static GSheetsService SheetsService;
+
         private class Row
         {
             public string Player { get; set; }
@@ -79,6 +81,11 @@
             botClient = new TelegramBotClient(token);
             botClient.OnMessage += OnMessage;
             botClient.StartReceiving();
+
+            //Google Sheets Service
+            SheetsService = new GSheetsService();
+            SheetsService.CreateService();
+            SheetsService.GetSheet();
 
             // intro
             var me = await botClient.GetMeAsync();
