@@ -343,7 +343,7 @@
         {
             var text = title + "\n";
             text += "```\n";
-            text += "Equ|Pt| G| E| P|GF|GC|Dif\n";
+            text += "Equ|Pt|PJ| G| E| P|GF|Dif\n";
             text += "=========================\n";
 
             // This is important
@@ -356,11 +356,11 @@
             {
                 text += (row.Player.Length > 3? row.Player.Substring(0, 3) : row.Player.PadRight(3)) + "|";
                 text += $"{row.Points}".PadLeft(2) + "|";
+                text += $"{row.TotalGames}".PadLeft(2) + "|";
                 text += $"{row.Won}".PadLeft(2) + "|";
                 text += $"{row.Draw}".PadLeft(2) + "|";
                 text += $"{row.Lost}".PadLeft(2) + "|";
                 text += $"{row.GoalsInFavor}".PadLeft(2) + "|";
-                text += $"{row.GoalsAgainst}".PadLeft(2) + "|";
                 text += $"{row.GoalDifference}".PadLeft(3) + "\n";
             }
 
