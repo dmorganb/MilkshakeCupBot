@@ -73,9 +73,7 @@
                 .AddJsonFile("appSettings.json", optional: true, reloadOnChange: true);
             var configuration = builder.Build();
             var token = configuration["token"];
-
-            GroupA = await ReadGroup("GroupA.csv");
-            GroupB = await ReadGroup("GroupB.csv");
+            var spreadsheetId = configuration["spreadsheetId"];
 
             // bot client
             botClient = new TelegramBotClient(token);
@@ -83,9 +81,16 @@
             botClient.StartReceiving();
 
             //Google Sheets Service
-            SheetsService = new GSheetsService();
+            SheetsService = new GSheetsService(spreadsheetId);
             SheetsService.CreateService();
-            SheetsService.GetSheet();
+
+            //Read Group A from Drive And load it to memory
+            var groupAFromDrive = await SheetsService.GetSheetAsync("Grupo A - Tabla", "A10", "J");
+            GroupA = ReadGroupFromDrive(groupAFromDrive);
+
+            //Read Group B from Drive And load it to memory
+            var groupBFromDrive = await SheetsService.GetSheetAsync("Grupo B - Tabla", "A9", "J");
+            GroupB = ReadGroupFromDrive(groupBFromDrive);
 
             // intro
             var me = await botClient.GetMeAsync();
@@ -101,22 +106,20 @@
             while (input.Key != ConsoleKey.Escape);
         }
 
-        private static async Task<List<Row>> ReadGroup(string file)
+        private static List<Row> ReadGroupFromDrive(List<List<string>> groupFromDrive) 
         {
-            var fileLines = await System.IO.File.ReadAllLinesAsync(file);
             var group = new List<Row>();
-
-            foreach (var line in fileLines)
+            foreach (var row in groupFromDrive) 
             {
-                var fields = line.Split(',');
                 group.Add(new Row(
-                    fields[0]?.ToLower(),
-                    fields[1]?.ToLower(),
-                    int.Parse(fields[2]),
-                    int.Parse(fields[3]),
-                    int.Parse(fields[4]),
-                    int.Parse(fields[5]),
-                    int.Parse(fields[6])));
+                    row[0].ToLower(),
+                    row[1].ToLower(),
+                    int.Parse(row[3]),
+                    int.Parse(row[4]),
+                    int.Parse(row[5]),
+                    int.Parse(row[6]),
+                    int.Parse(row[7])
+                ));
             }
 
             return group;

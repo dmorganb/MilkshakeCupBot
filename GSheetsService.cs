@@ -8,13 +8,23 @@ namespace MilkshakeCup
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
+    using System.Text;
     using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.Configuration;
 
     public class GSheetsService 
     {
         static string[] Scopes = { SheetsService.Scope.Spreadsheets };
         static string ApplicationName = "MilkshakeBot";
         SheetsService Service = null;
+        private static string SpreadsheetId;
+
+        public GSheetsService(string spreadsheetId) 
+        {
+            SpreadsheetId = spreadsheetId;
+        }
 
         public void CreateService() 
         {
@@ -29,28 +39,33 @@ namespace MilkshakeCup
             });
         }
 
-        public void GetSheet() 
+        // GetSheet(): Will retrieve information from specific sheet
+        // [param]sheetName: the name for the specific sheet the user wants from the spreadsheet file
+        // [param]startRange: specific cell number where reading will start
+        // [param]finishRange: specific cell number where reading will end
+        public async Task<List<List<string>>> GetSheetAsync(string sheetName, string startRange, string finishRange) 
         {
-            // Define request parameters.
-            String spreadsheetId = "1wmEGftpCfUU0fyUf0amrV8Zp0GEkR9cIHJAnvKBQRRQ";
-            String range = "'Grupo A - Tabla'!A10:I";
-            SpreadsheetsResource.ValuesResource.GetRequest request = Service.Spreadsheets.Values.Get(spreadsheetId, range);
+            List<List<string>> responseValues = new List<List<string>>();
 
-            ValueRange response = request.Execute();
+            string range = "'" + sheetName + "'!" + startRange + ":" + finishRange;
+            SpreadsheetsResource.ValuesResource.GetRequest request = Service.Spreadsheets.Values.Get(SpreadsheetId, range);
+
+            ValueRange response = await request.ExecuteAsync();
             IList<IList<Object>> values = response.Values;
             if (values != null && values.Count > 0)
             {
-                Console.WriteLine("Equipo | Partidos");
-                foreach (var row in values)
+                foreach(var row in values) 
                 {
-                    // Print columns A and E, which correspond to indices 0 and 4.
-                    Console.WriteLine("{0}, {1}", row[0], row[1]);
+                    var rowToAdd = new List<string>();
+                    foreach(var column in row) 
+                    {
+                        rowToAdd.Add((string) column);
+                    }
+                    responseValues.Add(rowToAdd);
                 }
-            }
-            else
-            {
-                Console.WriteLine("No data found.");
-            }
+            }    
+
+            return responseValues;        
         }
 
         private UserCredential GetCredentials()
