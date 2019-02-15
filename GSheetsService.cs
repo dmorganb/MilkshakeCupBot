@@ -39,7 +39,7 @@ namespace MilkshakeCup
             });
         }
 
-        // GetSheet(): Will retrieve information from specific sheet
+        // GetSheetAsync(): Will retrieve information from specific sheet
         // [param]sheetName: the name for the specific sheet the user wants from the spreadsheet file
         // [param]startRange: specific cell number where reading will start
         // [param]finishRange: specific cell number where reading will end
@@ -66,6 +66,36 @@ namespace MilkshakeCup
             }    
 
             return responseValues;        
+        }
+
+        // UpdateSheetAsync(): Will update information for specific sheet
+        // [param]sheetName: the name for the specific sheet the user wants from the spreadsheet file
+        // [param]startRange: specific cell number where reading will start
+        // [param]finishRange: specific cell number where reading will end
+        // [param]values: the sheet will be updated with these values
+        public async Task<int?> UpdateSheetAsync(string sheetName, string startRange, string finishRange, List<List<string>> values) 
+        {
+            string range = "'" + sheetName + "'!" + startRange + ":" + finishRange;
+            var valueRange = new ValueRange();
+
+            //We need a IList<IList<object>> object to send the data. This loop is to convert [param]values into that object
+            IList<IList<object>> valuesObject = new List<IList<object>>();
+            foreach (var rowValue in values) {
+                var rowObject = new List<object>();
+                foreach(var columnValue in rowValue) {
+                    rowObject.Add(columnValue);
+                }
+                valuesObject.Add(rowObject);
+            }
+
+            valueRange.Values = valuesObject;
+
+            SpreadsheetsResource.ValuesResource.UpdateRequest request = Service.Spreadsheets.Values.Update(valueRange, SpreadsheetId, range);
+            request.ValueInputOption =  SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
+
+            UpdateValuesResponse response = await request.ExecuteAsync();
+
+            return response.UpdatedCells; 
         }
 
         private UserCredential GetCredentials()

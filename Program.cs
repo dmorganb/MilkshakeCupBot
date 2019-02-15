@@ -314,9 +314,9 @@
                     row2.GoalsInFavor += goals2;
                     row2.GoalsAgainst += goals1;
 
-                    // save current table to file
-                    await System.IO.File.WriteAllLinesAsync("GroupA.csv", Csv(GroupA));
-                    await System.IO.File.WriteAllLinesAsync("GroupB.csv", Csv(GroupB));
+                    // save current table to Drive
+                    await WriteGroupIntoDrive(GroupA, "Grupo A - Tabla", "A2", "J7");
+                    await WriteGroupIntoDrive(GroupB, "Grupo B - Tabla", "A2", "J6");
 
                     // confirmation message
                     var message = await botClient.SendTextMessageAsync(
@@ -330,16 +330,27 @@
             }
         }
 
-        private static List<string> Csv(List<Row> group)
+        // TODO: This method can become one-parameter long if we create a Group class with a Location property thet would contain the sheetname and range.
+        private async static Task<bool> WriteGroupIntoDrive(List<Row> group, string sheetName, string startRange, string finishRange) 
         {
-            var lines = new List<string>();
-            
-            foreach (var row in group)
+            var updatingValues = new List<List<string>>();
+
+            foreach (var row in group) 
             {
-                lines.Add($"{row.Player},{row.Team},{row.Won},{row.Draw},{row.Lost},{row.GoalsInFavor},{row.GoalsAgainst}");
+                var updatedRow = new List<string> {row.Player, row.Team, row.TotalGames.ToString(), row.Won.ToString(), row.Draw.ToString(), 
+                                                   row.Lost.ToString(), row.GoalsInFavor.ToString(), row.GoalsAgainst.ToString(), 
+                                                   row.GoalDifference.ToString(), row.Points.ToString()};
+                updatingValues.Add(updatedRow);
             }
 
-            return lines;
+            if (updatingValues.Count > 0)
+            {
+                var numberOfCellsChanged = await SheetsService.UpdateSheetAsync(sheetName, startRange, finishRange, updatingValues);
+                Console.WriteLine(@"{0} cell(s) written", numberOfCellsChanged);
+                return true;
+            }
+
+            return false;
         }
 
         private static string GroupTableMessage(string title, List<Row> group) 
