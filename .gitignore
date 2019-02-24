@@ -5,3 +5,5 @@ GroupB.1.csv
 GroupA.csv
 GroupB.csv
 appSettings.json
+g_credentials.json
+.credentials/

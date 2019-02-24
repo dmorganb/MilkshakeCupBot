@@ -22,6 +22,8 @@
 
         private static List<Row> GroupB { get; set; }
 
+        private static GSheetsService SheetsService;
+
         private class Row
         {
             public string Player { get; set; }
@@ -71,14 +73,24 @@
                 .AddJsonFile("appSettings.json", optional: true, reloadOnChange: true);
             var configuration = builder.Build();
             var token = configuration["token"];
-
-            GroupA = await ReadGroup("GroupA.csv");
-            GroupB = await ReadGroup("GroupB.csv");
+            var spreadsheetId = configuration["spreadsheetId"];
 
             // bot client
             botClient = new TelegramBotClient(token);
             botClient.OnMessage += OnMessage;
             botClient.StartReceiving();
+
+            //Google Sheets Service
+            SheetsService = new GSheetsService(spreadsheetId);
+            SheetsService.CreateService();
+
+            //Read Group A from Drive And load it to memory
+            var groupAFromDrive = await SheetsService.GetSheetAsync("Grupo A - Tabla", "A10", "J");
+            GroupA = ReadGroupFromDrive(groupAFromDrive);
+
+            //Read Group B from Drive And load it to memory
+            var groupBFromDrive = await SheetsService.GetSheetAsync("Grupo B - Tabla", "A9", "J");
+            GroupB = ReadGroupFromDrive(groupBFromDrive);
 
             // intro
             var me = await botClient.GetMeAsync();
@@ -94,22 +106,20 @@
             while (input.Key != ConsoleKey.Escape);
         }
 
-        private static async Task<List<Row>> ReadGroup(string file)
+        private static List<Row> ReadGroupFromDrive(List<List<string>> groupFromDrive) 
         {
-            var fileLines = await System.IO.File.ReadAllLinesAsync(file);
             var group = new List<Row>();
-
-            foreach (var line in fileLines)
+            foreach (var row in groupFromDrive) 
             {
-                var fields = line.Split(',');
                 group.Add(new Row(
-                    fields[0]?.ToLower(),
-                    fields[1]?.ToLower(),
-                    int.Parse(fields[2]),
-                    int.Parse(fields[3]),
-                    int.Parse(fields[4]),
-                    int.Parse(fields[5]),
-                    int.Parse(fields[6])));
+                    row[0].ToLower(),
+                    row[1].ToLower(),
+                    int.Parse(row[3]),
+                    int.Parse(row[4]),
+                    int.Parse(row[5]),
+                    int.Parse(row[6]),
+                    int.Parse(row[7])
+                ));
             }
 
             return group;
@@ -304,9 +314,9 @@
                     row2.GoalsInFavor += goals2;
                     row2.GoalsAgainst += goals1;
 
-                    // save current table to file
-                    await System.IO.File.WriteAllLinesAsync("GroupA.csv", Csv(GroupA));
-                    await System.IO.File.WriteAllLinesAsync("GroupB.csv", Csv(GroupB));
+                    // save current table to Drive
+                    await WriteGroupIntoDrive(GroupA, "Grupo A - Tabla", "A2", "J7");
+                    await WriteGroupIntoDrive(GroupB, "Grupo B - Tabla", "A2", "J6");
 
                     // confirmation message
                     var message = await botClient.SendTextMessageAsync(
@@ -320,16 +330,27 @@
             }
         }
 
-        private static List<string> Csv(List<Row> group)
+        // TODO: This method can become one-parameter long if we create a Group class with a Location property thet would contain the sheetname and range.
+        private async static Task<bool> WriteGroupIntoDrive(List<Row> group, string sheetName, string startRange, string finishRange) 
         {
-            var lines = new List<string>();
-            
-            foreach (var row in group)
+            var updatingValues = new List<List<string>>();
+
+            foreach (var row in group) 
             {
-                lines.Add($"{row.Player},{row.Team},{row.Won},{row.Draw},{row.Lost},{row.GoalsInFavor},{row.GoalsAgainst}");
+                var updatedRow = new List<string> {row.Player, row.Team, row.TotalGames.ToString(), row.Won.ToString(), row.Draw.ToString(), 
+                                                   row.Lost.ToString(), row.GoalsInFavor.ToString(), row.GoalsAgainst.ToString(), 
+                                                   row.GoalDifference.ToString(), row.Points.ToString()};
+                updatingValues.Add(updatedRow);
             }
 
-            return lines;
+            if (updatingValues.Count > 0)
+            {
+                var numberOfCellsChanged = await SheetsService.UpdateSheetAsync(sheetName, startRange, finishRange, updatingValues);
+                Console.WriteLine(@"{0} cell(s) written", numberOfCellsChanged);
+                return true;
+            }
+
+            return false;
         }
 
         private static string GroupTableMessage(string title, List<Row> group) 
