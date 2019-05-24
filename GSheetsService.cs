@@ -26,10 +26,9 @@ namespace MilkshakeCup
             SpreadsheetId = spreadsheetId;
         }
 
-        public void CreateService() 
+        public async Task CreateService() 
         {
-            UserCredential credential;
-            credential = GetCredentials();
+            var credential = await GetCredentials();
 
             // Create Google Sheets API service.
             Service = new SheetsService(new BaseClientService.Initializer()
@@ -98,18 +97,18 @@ namespace MilkshakeCup
             return response.UpdatedCells; 
         }
 
-        private UserCredential GetCredentials()
+        private async Task<UserCredential> GetCredentials()
         {
             UserCredential credential;
 
             using (var stream = new FileStream("g_credentials.json", FileMode.Open, FileAccess.Read))
             {
-                credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
+                credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
                     GoogleClientSecrets.Load(stream).Secrets,
                     Scopes,
                     "MilkshakeBot",
                     CancellationToken.None,
-                    new FileDataStore(".credentials/milkshakecup-bot.json", true)).Result;
+                    new FileDataStore(".credentials/milkshakecup-bot.json", true));
                 Console.WriteLine("Credential file saved to: /.credentials/milkshakecup-bot.json");
             }
 

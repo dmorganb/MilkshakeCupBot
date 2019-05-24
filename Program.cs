@@ -82,7 +82,7 @@
 
             //Google Sheets Service
             SheetsService = new GSheetsService(spreadsheetId);
-            SheetsService.CreateService();
+            await SheetsService.CreateService();
 
             //Read Group A from Drive And load it to memory
             var groupAFromDrive = await SheetsService.GetSheetAsync("Grupo A - Tabla", "A10", "J");
