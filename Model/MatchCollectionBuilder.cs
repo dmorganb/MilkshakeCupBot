@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-using System.Linq;
-
 namespace MilkshakeCup.Model
 {
+    using System.Collections.Generic;
+    using System.Linq;
+
     public class MatchCollectionBuilder
     {
         private string _name;

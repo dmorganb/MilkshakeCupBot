@@ -89,7 +89,7 @@
             GroupA = ReadGroupFromDrive(groupAFromDrive);
 
             //Read Group B from Drive And load it to memory
-            var groupBFromDrive = await SheetsService.GetSheetAsync("Grupo B - Tabla", "A9", "J");
+            var groupBFromDrive = await SheetsService.GetSheetAsync("Grupo B - Tabla", "A10", "J");
             GroupB = ReadGroupFromDrive(groupBFromDrive);
 
             // intro
@@ -316,7 +316,7 @@
 
                     // save current table to Drive
                     await WriteGroupIntoDrive(GroupA, "Grupo A - Tabla", "A2", "J7");
-                    await WriteGroupIntoDrive(GroupB, "Grupo B - Tabla", "A2", "J6");
+                    await WriteGroupIntoDrive(GroupB, "Grupo B - Tabla", "A2", "J7");
 
                     // confirmation message
                     var message = await botClient.SendTextMessageAsync(
