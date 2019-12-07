@@ -159,8 +159,8 @@
                     group.Where(x => x.Team.StartsWith(rowHint) || x.Player.Contains(rowHint)).FirstOrDefault();
 
                 var groups = groupsRepository.Groups();
-                var row1 = groups.Select(x => findRow(x, team1)).FirstOrDefault(x => x != null);
-                var row2 = groups.Select(x => findRow(x, team2)).FirstOrDefault(x => x != null);
+                var row1 = groups.Select(x => x.Row(team1)).FirstOrDefault(x => x != null);
+                var row2 = groups.Select(x => x.Row(team2)).FirstOrDefault(x => x != null);
 
                 // row validations:
 
@@ -188,12 +188,12 @@
                     return;
                 }
 
-                var row1Group = groups.FirstOrDefault(x => x.Contains(row1));
-                var row2Group = groups.FirstOrDefault(x => x.Contains(row2));
+                var row1Group = groups.FirstOrDefault(x => x.Has(row1));
+                var row2Group = groups.FirstOrDefault(x => x.Has(row2));
 
                 // 3) Teams belong to the same group.
-                if ((row1Group.Contains(row1) && !row1Group.Contains(row2)) ||
-                    (row2Group.Contains(row1) && !row2Group.Contains(row2)))
+                if ((row1Group.Has(row1) && !row1Group.Has(row2)) ||
+                    (row2Group.Has(row1) && !row2Group.Has(row2)))
                 {
                     var message = await botClient.SendTextMessageAsync(
                         chatId: e.Message.Chat,
@@ -272,18 +272,14 @@
             }
         }
 
-        private static string GroupTableMessage(string title, List<Row> group) 
+        private static string GroupTableMessage(string title, Group group) 
         {
             var text = title + "\n";
             text += "```\n";
             text += "Equ|Pt|PJ| G| E| P|GF|Dif\n";
             text += "=========================\n";
 
-            // This is important
-            var orderedGroup = group
-                .OrderByDescending(x => x.Points)
-                .ThenByDescending(x => x.GoalDifference)
-                .ThenByDescending(x => x.GoalsInFavor);
+            var orderedGroup = group.Rows;
 
             foreach (var row in orderedGroup)
             {

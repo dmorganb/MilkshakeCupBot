@@ -4,10 +4,10 @@ namespace MilkshakeCup
 
     public interface IGroupsRepository 
     {
-        List<List<Row>> Groups();
+        IEnumerable<Group> Groups();
 
-        List<Row> Group(string groupName);
+        Group Group(string groupName);
 
-        void Save(List<Row> group);
+        void Save(Group group);
     }
 }
