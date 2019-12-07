@@ -1,4 +1,4 @@
-namespace MilkshakeCup
+namespace MilkshakeCup.Models
 {
     using System.Collections.Generic;
 

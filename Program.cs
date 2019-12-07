@@ -9,6 +9,7 @@
     using Telegram.Bot;
     using Telegram.Bot.Args;
     using Telegram.Bot.Types.Enums;
+    using MilkshakeCup.Models;
 
     public class Program
     {

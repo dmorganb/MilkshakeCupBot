@@ -1,8 +1,9 @@
-using System.Collections.Generic;
-using System.Linq;
-
 namespace MilkshakeCup
 {
+    using System.Collections.Generic;
+    using System.Linq;
+    using MilkshakeCup.Models;
+    
     public class MemoryGroupsRepository : IGroupsRepository
     {
         private Group _groupA;

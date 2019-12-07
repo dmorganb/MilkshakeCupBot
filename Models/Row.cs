@@ -1,4 +1,4 @@
-namespace MilkshakeCup
+namespace MilkshakeCup.Models
 {
     public class Row
     {
