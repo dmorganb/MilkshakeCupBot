@@ -4,66 +4,17 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Text;
-    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Configuration;
     using Telegram.Bot;
     using Telegram.Bot.Args;
-    using Telegram.Bot.Types;
     using Telegram.Bot.Types.Enums;
-    using Telegram.Bot.Types.ReplyMarkups;
 
     public class Program
     {
         private static ITelegramBotClient botClient;
-        
-        private static List<Row> GroupA { get; set; }
 
-        private static List<Row> GroupB { get; set; }
-
-        private static GSheetsService SheetsService;
-
-        private class Row
-        {
-            public string Player { get; set; }
-            
-            public string Team { get; set; }
-            
-            public int Points => (Won * 3) + Draw;
-
-            public int TotalGames => Won + Lost + Draw;
-
-            public int Won { get; set; }
-
-            public int Draw { get; set; }
-
-            public int Lost { get; set; }            
-            
-            public int GoalsInFavor { get; set; }
-
-            public int GoalsAgainst { get; set; }
-
-            public int GoalDifference => GoalsInFavor - GoalsAgainst;
-
-            public Row(
-                string player, 
-                string team, 
-                int won, 
-                int draw, 
-                int lost, 
-                int goalsInFavor, 
-                int goalsAgainst)
-            {
-                Player = player;
-                Team = team;
-                Won = won;
-                Draw = draw;
-                Lost = lost;
-                GoalsInFavor = goalsInFavor;
-                GoalsAgainst = goalsAgainst;
-            }
-        }
+        private static IGroupsRepository groupsRepository { get; set; }
 
         public static async Task Main(string[] args)
         {
@@ -80,18 +31,8 @@
             botClient.OnMessage += OnMessage;
             botClient.StartReceiving();
 
-            //Google Sheets Service
-            SheetsService = new GSheetsService(spreadsheetId);
-            await SheetsService.CreateService();
-
-            //Read Group A from Drive And load it to memory
-            var groupAFromDrive = await SheetsService.GetSheetAsync("Grupo A - Tabla", "A10", "J");
-            GroupA = ReadGroupFromDrive(groupAFromDrive);
-
-            //Read Group B from Drive And load it to memory
-            var groupBFromDrive = await SheetsService.GetSheetAsync("Grupo B - Tabla", "A10", "J");
-            GroupB = ReadGroupFromDrive(groupBFromDrive);
-
+            groupsRepository = new MemoryGroupsRepository();
+            
             // intro
             var me = await botClient.GetMeAsync();
             Console.WriteLine($"Hello, World! I am user {me.Id} and my name is {me.FirstName}.");
@@ -104,25 +45,6 @@
                 input = Console.ReadKey();
             }
             while (input.Key != ConsoleKey.Escape);
-        }
-
-        private static List<Row> ReadGroupFromDrive(List<List<string>> groupFromDrive) 
-        {
-            var group = new List<Row>();
-            foreach (var row in groupFromDrive) 
-            {
-                group.Add(new Row(
-                    row[0].ToLower(),
-                    row[1].ToLower(),
-                    int.Parse(row[3]),
-                    int.Parse(row[4]),
-                    int.Parse(row[5]),
-                    int.Parse(row[6]),
-                    int.Parse(row[7])
-                ));
-            }
-
-            return group;
         }
 
         private static async void OnMessage(object sender, MessageEventArgs e) 
@@ -157,17 +79,19 @@
         private static async Task TablasCommand(MessageEventArgs e)
         {
             var parameters = e.Message.Text.Split(' ');
-            var selectedGroups = "ab";
+            var selectedGroups = "abc";
 
             if (parameters.Length > 1)
             {
                 selectedGroups = parameters[1]?.ToLower();
             }
 
-            selectedGroups = (selectedGroups == "a" || selectedGroups == "b") ? selectedGroups : "ab";
+            selectedGroups = (selectedGroups == "a" || selectedGroups == "b" || selectedGroups == "c") ? selectedGroups : "abc";
 
             if (selectedGroups.Contains("a"))
             {
+                var GroupA = groupsRepository.Group("a");
+
                 var message1 = await botClient.SendTextMessageAsync(
                     chatId: e.Message.Chat,
                     text: GroupTableMessage("Grupo A", GroupA),
@@ -178,9 +102,23 @@
 
             if (selectedGroups.Contains("b"))
             {
+                var GroupB = groupsRepository.Group("b");
+
                 var message2 = await botClient.SendTextMessageAsync(
                     chatId: e.Message.Chat,
                     text: GroupTableMessage("Grupo B", GroupB),
+                    parseMode: ParseMode.Markdown,
+                    disableNotification: true,
+                    replyToMessageId: e.Message.MessageId);
+            }
+
+            if (selectedGroups.Contains("c"))
+            {
+                var GroupC = groupsRepository.Group("c");
+
+                var message2 = await botClient.SendTextMessageAsync(
+                    chatId: e.Message.Chat,
+                    text: GroupTableMessage("Grupo C", GroupC),
                     parseMode: ParseMode.Markdown,
                     disableNotification: true,
                     replyToMessageId: e.Message.MessageId);
@@ -217,10 +155,12 @@
                     goals2 = -1;
                 }
 
-                var row1 = GroupA.FirstOrDefault(x => x.Team.StartsWith(team1) || x.Player.Contains(team1)) ??
-                        GroupB.FirstOrDefault(x => x.Team.StartsWith(team1) || x.Player.Contains(team1));
-                var row2 = GroupA.FirstOrDefault(x => x.Team.StartsWith(team2) || x.Player.Contains(team2)) ??
-                        GroupB.FirstOrDefault(x => x.Team.StartsWith(team2) || x.Player.Contains(team2));
+                Func<List<Row>, string, Row> findRow = (group, rowHint) => 
+                    group.Where(x => x.Team.StartsWith(rowHint) || x.Player.Contains(rowHint)).FirstOrDefault();
+
+                var groups = groupsRepository.Groups();
+                var row1 = groups.Select(x => findRow(x, team1)).FirstOrDefault(x => x != null);
+                var row2 = groups.Select(x => findRow(x, team2)).FirstOrDefault(x => x != null);
 
                 // row validations:
 
@@ -248,9 +188,12 @@
                     return;
                 }
 
+                var row1Group = groups.FirstOrDefault(x => x.Contains(row1));
+                var row2Group = groups.FirstOrDefault(x => x.Contains(row2));
+
                 // 3) Teams belong to the same group.
-                if ((GroupA.Contains(row1) && !GroupA.Contains(row2)) ||
-                    (GroupB.Contains(row1) && !GroupB.Contains(row2)))
+                if ((row1Group.Contains(row1) && !row1Group.Contains(row2)) ||
+                    (row2Group.Contains(row1) && !row2Group.Contains(row2)))
                 {
                     var message = await botClient.SendTextMessageAsync(
                         chatId: e.Message.Chat,
@@ -315,8 +258,7 @@
                     row2.GoalsAgainst += goals1;
 
                     // save current table to Drive
-                    await WriteGroupIntoDrive(GroupA, "Grupo A - Tabla", "A2", "J7");
-                    await WriteGroupIntoDrive(GroupB, "Grupo B - Tabla", "A2", "J7");
+                    groupsRepository.Save(row1Group); // row1Group and row2GroupShouldBeTheSame
 
                     // confirmation message
                     var message = await botClient.SendTextMessageAsync(
@@ -328,29 +270,6 @@
                 }
 
             }
-        }
-
-        // TODO: This method can become one-parameter long if we create a Group class with a Location property thet would contain the sheetname and range.
-        private async static Task<bool> WriteGroupIntoDrive(List<Row> group, string sheetName, string startRange, string finishRange) 
-        {
-            var updatingValues = new List<List<string>>();
-
-            foreach (var row in group) 
-            {
-                var updatedRow = new List<string> {row.Player, row.Team, row.TotalGames.ToString(), row.Won.ToString(), row.Draw.ToString(), 
-                                                   row.Lost.ToString(), row.GoalsInFavor.ToString(), row.GoalsAgainst.ToString(), 
-                                                   row.GoalDifference.ToString(), row.Points.ToString()};
-                updatingValues.Add(updatedRow);
-            }
-
-            if (updatingValues.Count > 0)
-            {
-                var numberOfCellsChanged = await SheetsService.UpdateSheetAsync(sheetName, startRange, finishRange, updatingValues);
-                Console.WriteLine(@"{0} cell(s) written", numberOfCellsChanged);
-                return true;
-            }
-
-            return false;
         }
 
         private static string GroupTableMessage(string title, List<Row> group) 
