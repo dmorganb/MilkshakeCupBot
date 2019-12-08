@@ -7,35 +7,31 @@ namespace MilkshakeCup.Models
     {
         public string Name { get; }
 
-        // Returns the rows ordered by the rules
-        public IOrderedEnumerable<Row> Rows => _rows
+        // Returns the players ordered by the rules.
+        public IOrderedEnumerable<Player> Players => _players
                 .OrderByDescending(x => x.Points)
                 .ThenByDescending(x => x.GoalDifference)
                 .ThenByDescending(x => x.GoalsInFavor);
 
-        private List<Row> _rows;
+        private List<Player> _players;
 
         public Group(string name)
         {
             Name = name;
-            _rows = new List<Row>();
+            _players = new List<Player>();
         }
 
-        public void AddRow(Row row)
+        public void AddPlayer(Player player)
         {
-            _rows.Add(row);
+            player.Group = this;
+            _players.Add(player);
         }
 
-        public Row Row(string rowHint)
-        {
-            return _rows.FirstOrDefault(x => 
-                x.Team.StartsWith(rowHint) || 
-                x.Player.Contains(rowHint));
-        }
-
-        public bool Has(Row row)
-        {
-            return _rows.Contains(row);
-        }
+        /// <summary>
+        /// Search a player in the group by a hint.
+        /// hint can be the name of the player or the team.
+        /// </summary>
+        public Player PlayerByHint(string hint) => 
+            _players.FirstOrDefault(x => x.Team.StartsWith(hint) || x.Name.Contains(hint));
     }
 }

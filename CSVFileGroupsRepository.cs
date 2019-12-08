@@ -32,7 +32,7 @@
 
                 foreach (var csvLine in File.ReadAllLines(FilePath(groupName)))
                 {
-                    group.AddRow(Row(csvLine));
+                    group.AddPlayer(Player(csvLine));
                 }
             }
 
@@ -43,7 +43,7 @@
         {
             File.WriteAllLines(
                 FilePath(group.Name),
-                group.Rows.Select(CSV).ToArray());
+                group.Players.Select(CSV).ToArray());
         }
 
         /// <summary>
@@ -72,11 +72,11 @@
             return Path.Combine(_folderPath, groupName + csvExtension);
         }
 
-        private static Row Row(string csvLine)
+        private static Player Player(string csvLine)
         {
             var columns = csvLine.Split(comma);
 
-            return new Row(
+            return new Player(
                 columns[0],
                 columns[1],
                 int.Parse(columns[2]),
@@ -86,17 +86,17 @@
                 int.Parse(columns[6]));
         }
 
-        private static string CSV(Row row)
+        private static string CSV(Player player)
         {
             return string.Join(
                 comma,
-                row.Player,
-                row.Team,
-                row.Won,
-                row.Draw,
-                row.Lost,
-                row.GoalsInFavor,
-                row.GoalsAgainst);
+                player.Name,
+                player.Team,
+                player.Won,
+                player.Draw,
+                player.Lost,
+                player.GoalsInFavor,
+                player.GoalsAgainst);
         }
     }
 }
