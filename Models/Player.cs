@@ -42,22 +42,42 @@ namespace MilkshakeCup.Models
             GoalsAgainst = goalsAgainst;
         }
 
-        public void Loses(int myGoals, int otherPlayerGoals)
+        public void Match(int goalsInFavor, int goalsAgainst)
         {
-            Lost++;
-            GoalsBookkeeping(myGoals, otherPlayerGoals);
+            if (goalsInFavor > goalsAgainst)
+            {
+                Won++;
+            }
+            else if (goalsInFavor < goalsAgainst)
+            {
+                Lost++;
+            }
+            else
+            {
+                Draw++;
+            }
+
+            GoalsInFavor += goalsInFavor;
+            GoalsAgainst += goalsAgainst;
         }
 
-        public void Wins(int myGoals, int otherPlayerGoals)
+        public void Erase(int goalsInFavor, int goalsAgainst)
         {
-            Won++;
-            GoalsBookkeeping(myGoals, otherPlayerGoals);
-        }
+            if (goalsInFavor > goalsAgainst)
+            {
+                Won--;
+            }
+            else if (goalsInFavor < goalsAgainst)
+            {
+                Lost--;
+            }
+            else
+            {
+                Draw--;
+            }
 
-        public void Draws(int myGoals, int otherPlayerGoals)
-        {
-            Draw++;
-            GoalsBookkeeping(myGoals, otherPlayerGoals);
+            GoalsInFavor -= goalsInFavor;
+            GoalsAgainst -= goalsAgainst;
         }
 
         public override bool Equals(object obj)
@@ -86,12 +106,6 @@ namespace MilkshakeCup.Models
             }
 
             return hash;
-        }
-
-        private void GoalsBookkeeping(int myGoals, int otherPlayerGoals)
-        {
-            GoalsInFavor += myGoals;
-            GoalsAgainst += otherPlayerGoals;
         }
     }
 }
