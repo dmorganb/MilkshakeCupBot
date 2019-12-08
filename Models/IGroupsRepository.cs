@@ -4,7 +4,7 @@ namespace MilkshakeCup.Models
 
     public interface IGroupsRepository 
     {
-        IEnumerable<Group> Groups();
+        Group[] Groups();
 
         Group Group(string groupName);
 

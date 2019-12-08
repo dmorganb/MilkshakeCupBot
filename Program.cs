@@ -1,7 +1,6 @@
 ﻿namespace MilkshakeCup
 {
     using System;
-    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
@@ -32,7 +31,7 @@
             botClient.OnMessage += OnMessage;
             botClient.StartReceiving();
 
-            groupsRepository = new MemoryGroupsRepository();
+            groupsRepository = new CSVFileGroupsRepository("Groups");
             
             // intro
             var me = await botClient.GetMeAsync();
@@ -74,6 +73,7 @@
             {
                 // fail silently 
                 Console.WriteLine($"There was an exception with message e: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
             }
         }
 
@@ -89,40 +89,17 @@
 
             selectedGroups = (selectedGroups == "a" || selectedGroups == "b" || selectedGroups == "c") ? selectedGroups : "abc";
 
-            if (selectedGroups.Contains("a"))
+            foreach (var group in groupsRepository.Groups())
             {
-                var GroupA = groupsRepository.Group("a");
-
-                var message1 = await botClient.SendTextMessageAsync(
-                    chatId: e.Message.Chat,
-                    text: GroupTableMessage("Grupo A", GroupA),
-                    parseMode: ParseMode.Markdown,
-                    disableNotification: true,
-                    replyToMessageId: e.Message.MessageId);
-            }
-
-            if (selectedGroups.Contains("b"))
-            {
-                var GroupB = groupsRepository.Group("b");
-
-                var message2 = await botClient.SendTextMessageAsync(
-                    chatId: e.Message.Chat,
-                    text: GroupTableMessage("Grupo B", GroupB),
-                    parseMode: ParseMode.Markdown,
-                    disableNotification: true,
-                    replyToMessageId: e.Message.MessageId);
-            }
-
-            if (selectedGroups.Contains("c"))
-            {
-                var GroupC = groupsRepository.Group("c");
-
-                var message2 = await botClient.SendTextMessageAsync(
-                    chatId: e.Message.Chat,
-                    text: GroupTableMessage("Grupo C", GroupC),
-                    parseMode: ParseMode.Markdown,
-                    disableNotification: true,
-                    replyToMessageId: e.Message.MessageId);
+                if (selectedGroups.Contains(group.Name))
+                {
+                    var message = await botClient.SendTextMessageAsync(
+                        chatId: e.Message.Chat,
+                        text: GroupTableMessage(group),
+                        parseMode: ParseMode.Markdown,
+                        disableNotification: true,
+                        replyToMessageId: e.Message.MessageId);
+                }
             }
         }
 
@@ -155,9 +132,6 @@
                 {
                     goals2 = -1;
                 }
-
-                Func<List<Row>, string, Row> findRow = (group, rowHint) => 
-                    group.Where(x => x.Team.StartsWith(rowHint) || x.Player.Contains(rowHint)).FirstOrDefault();
 
                 var groups = groupsRepository.Groups();
                 var row1 = groups.Select(x => x.Row(team1)).FirstOrDefault(x => x != null);
@@ -258,6 +232,8 @@
                     row2.GoalsInFavor += goals2;
                     row2.GoalsAgainst += goals1;
 
+                    Console.WriteLine(row1Group == row2Group);
+
                     // save current table to Drive
                     groupsRepository.Save(row1Group); // row1Group and row2GroupShouldBeTheSame
 
@@ -273,9 +249,9 @@
             }
         }
 
-        private static string GroupTableMessage(string title, Group group) 
+        private static string GroupTableMessage(Group group) 
         {
-            var text = title + "\n";
+            var text = "Group " + group.Name + "\n";
             text += "```\n";
             text += "Equ|Pt|PJ| G| E| P|GF|Dif\n";
             text += "=========================\n";

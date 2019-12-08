@@ -34,7 +34,7 @@ namespace MilkshakeCup
             _groupC.AddRow(new Row("jasson", "morelia", 0, 0, 0, 0, 0));
         }
 
-        public IEnumerable<Group> Groups()
+        public Group[] Groups()
         {
             return new[] { _groupA, _groupB, _groupC };
         }

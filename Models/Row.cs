@@ -39,5 +39,33 @@ namespace MilkshakeCup.Models
             GoalsInFavor = goalsInFavor;
             GoalsAgainst = goalsAgainst;
         }
+
+        public override bool Equals(object obj)
+        {
+            if ((obj == null) || !this.GetType().Equals(obj.GetType())) 
+            {
+                return false;
+            }
+            else 
+            { 
+                var row = (Row)obj; 
+
+                return (Player == row.Player) && (Team == row.Team);
+            }
+        }
+
+        // magic! https://stackoverflow.com/a/34913143/791186
+        public override int GetHashCode()
+        {
+            int hash = 19;
+            
+            unchecked // allow "wrap around" in the int
+            { 
+                hash = hash * 31 + this.Player.GetHashCode();
+                hash = hash * 31 + this.Team.GetHashCode();
+            }
+            
+            return hash;
+        }
     }
 }
