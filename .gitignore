@@ -1,9 +1,6 @@
 bin/
 obj/
-GroupA.1.csv
-GroupB.1.csv
-GroupA.csv
-GroupB.csv
+Groups/
 appSettings.json
 g_credentials.json
 .credentials/

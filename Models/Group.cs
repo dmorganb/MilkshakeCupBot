@@ -21,7 +21,7 @@ namespace MilkshakeCup.Models
             _players = new List<Player>();
         }
 
-        public void AddPlayer(Player player)
+        public void Add(Player player)
         {
             player.Group = this;
             _players.Add(player);

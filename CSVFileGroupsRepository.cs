@@ -32,7 +32,7 @@
 
                 foreach (var csvLine in File.ReadAllLines(FilePath(groupName)))
                 {
-                    group.AddPlayer(Player(csvLine));
+                    group.Add(Player(csvLine));
                 }
             }
 
