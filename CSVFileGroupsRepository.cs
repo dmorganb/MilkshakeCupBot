@@ -1,5 +1,6 @@
 ﻿namespace MilkshakeCup
 {
+    using System;
     using System.IO;
     using System.Linq;
     using MilkshakeCup.Models;
@@ -10,17 +11,14 @@
 
         private const string csvExtension = ".csv";
 
-        private string _folderPath;
+        private readonly string _folderPath;
 
         public CSVFileGroupsRepository(string folderPath)
         {
             _folderPath = folderPath;
         }
 
-        public Group[] Groups()
-        {
-            return GroupNames().Select(Group).ToArray();
-        }
+        public Group[] Groups() => GroupNames().Select(Group).ToArray();
 
         public Group Group(string groupName)
         {
@@ -29,22 +27,14 @@
             if (File.Exists(FilePath(groupName)))
             {
                 group = new Group(groupName);
-
-                foreach (var csvLine in File.ReadAllLines(FilePath(groupName)))
-                {
-                    group.Add(Player(csvLine));
-                }
+                Array.ForEach(File.ReadAllLines(FilePath(groupName)), csv => group.Add(Player(csv)));
             }
 
             return group;
         }
 
-        public void Save(Group group)
-        {
-            File.WriteAllLines(
-                FilePath(group.Name),
-                group.Players.Select(CSV).ToArray());
-        }
+        public void Save(Group group) => 
+            File.WriteAllLines(FilePath(group.Name), group.Players.Select(CSV).ToArray());
 
         /// <summary>
         /// Returns the file names of all .csv files in the _folderPath.
@@ -55,28 +45,23 @@
         ///     - b.csv
         /// will return "a" and "b" ordered alphabetically.
         /// </summary>
-        private IOrderedEnumerable<string> GroupNames()
-        {
-            const string all = "*";
-            return Directory.GetFiles(_folderPath, all + csvExtension)
+        private IOrderedEnumerable<string> GroupNames() => 
+            Directory
+                .GetFiles(_folderPath, "*" + csvExtension)
                 .Select(Path.GetFileNameWithoutExtension)
                 .OrderBy(groupName => groupName);
-        }
 
         /// <summary>
         /// Returns the FilePath for a group based on its name
         /// E.g. "a" will return "Groups/a.csv" (with _folderPath = "Groups")
         /// </summary>
-        private string FilePath(string groupName)
-        {
-            return Path.Combine(_folderPath, groupName + csvExtension);
-        }
+        private string FilePath(string groupName) => 
+            Path.Combine(_folderPath, groupName + csvExtension);
 
-        private static Player Player(string csvLine)
-        {
-            var columns = csvLine.Split(comma);
+        private static Player Player(string csv) => Player(csv.Split(comma));
 
-            return new Player(
+        private static Player Player(string[] columns) =>
+            new Player(
                 columns[0],
                 columns[1],
                 int.Parse(columns[2]),
@@ -84,11 +69,9 @@
                 int.Parse(columns[4]),
                 int.Parse(columns[5]),
                 int.Parse(columns[6]));
-        }
 
-        private static string CSV(Player player)
-        {
-            return string.Join(
+        private static string CSV(Player player) => 
+            string.Join(
                 comma,
                 player.Name,
                 player.Team,
@@ -97,6 +80,5 @@
                 player.Lost,
                 player.GoalsInFavor,
                 player.GoalsAgainst);
-        }
     }
 }

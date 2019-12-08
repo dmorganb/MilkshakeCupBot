@@ -8,12 +8,13 @@ namespace MilkshakeCup.Models
         public string Name { get; }
 
         // Returns the players ordered by the rules.
-        public IOrderedEnumerable<Player> Players => _players
+        public IOrderedEnumerable<Player> Players => 
+            _players
                 .OrderByDescending(x => x.Points)
                 .ThenByDescending(x => x.GoalDifference)
                 .ThenByDescending(x => x.GoalsInFavor);
 
-        private List<Player> _players;
+        private readonly List<Player> _players;
 
         public Group(string name)
         {
