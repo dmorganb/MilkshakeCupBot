@@ -69,7 +69,7 @@
                     await MarcadorCommand(e);
                     return;
                 }
-                else if(e.Message.Text.StartsWith("/borrar"))
+                else if (e.Message.Text.StartsWith("/borrar"))
                 {
                     await BorrarCommand(e);
                     return;
@@ -110,16 +110,21 @@
         }
 
         private static async Task MarcadorCommand(MessageEventArgs e)
-        {        
-            await MatchCommand(e, (p, f, a) => p.Match(f, a));
+        {
+            Action<Player, int, int> match = (player, goalsInFavor, goalsAgainst) =>
+                player.Match(goalsInFavor, goalsAgainst);
+            await MatchCommand(e, match);
         }
 
         private static async Task BorrarCommand(MessageEventArgs e)
         {
-            await MatchCommand(e, (p, f, a) => p.Erase(f, a));
+            Action<Player, int, int> revert = (player, goalsInFavor, goalsAgainst) =>
+                player.Erase(goalsInFavor, goalsAgainst);
+
+            await MatchCommand(e, revert);
         }
-        
-        private static async Task MatchCommand(MessageEventArgs e, Action<Player, int, int> action)
+
+        private static async Task MatchCommand(MessageEventArgs e, Action<Player, int, int> match)
         {
             var parameters = e.Message.Text.Split(' ');
 
@@ -131,26 +136,42 @@
                     parseMode: ParseMode.Default,
                     disableNotification: true,
                     replyToMessageId: e.Message.MessageId);
+
                 return;
             }
 
             var player1Hint = parameters[1]?.ToLower();
             var player1Goals = -1;
-            
+            var player2Hint = parameters[3]?.ToLower();
+            var player2Goals = -1;
+
+            var playersGroup = groupsRepository.Groups().FirstOrDefault(
+                group =>
+                    group.PlayerByHint(player1Hint) != null &&
+                    group.PlayerByHint(player2Hint) != null);
+
+            if (playersGroup == null)
+            {
+                var message = await botClient.SendTextMessageAsync(
+                    chatId: e.Message.Chat,
+                    text: $"no encontré un grupo con: {player1Hint}, {player2Hint}",
+                    parseMode: ParseMode.Default,
+                    disableNotification: true,
+                    replyToMessageId: e.Message.MessageId);
+
+                return;
+            }
+
+            // score validations            
             if (!int.TryParse(parameters[2], out player1Goals))
             {
                 player1Goals = -1;
             }
 
-            var player2Hint = parameters[3]?.ToLower();
-            var player2Goals = -1;
-
             if (!int.TryParse(parameters[4], out player2Goals))
             {
                 player2Goals = -1;
             }
-
-            // score validations
 
             // 1) goals reported are valid scores
             if (player1Goals < 0 || player2Goals < 0)
@@ -161,12 +182,13 @@
                     parseMode: ParseMode.Default,
                     disableNotification: true,
                     replyToMessageId: e.Message.MessageId);
+
                 return;
             }
 
             const int goalsThreshold = 10; // if someone scored more than 10 in the same game, that's suspicious.
 
-            // 2) no one scored more than 10 goals (possible but not probable)
+            // 2) no one should score more than 10 goals (possible but not probable)
             if (player1Goals > goalsThreshold || player2Goals > goalsThreshold)
             {
                 var message = await botClient.SendTextMessageAsync(
@@ -175,28 +197,14 @@
                     parseMode: ParseMode.Default,
                     disableNotification: true,
                     replyToMessageId: e.Message.MessageId);
+
                 return;
             }
 
-            var groups = groupsRepository.Groups();
-            var player1 = groups.Select(x => x.PlayerByHint(player1Hint)).FirstOrDefault(x => x != null);
-            var player2 = groups.Select(x => x.PlayerByHint(player2Hint)).FirstOrDefault(x => x != null);
+            var player1 = playersGroup.PlayerByHint(player1Hint);
+            var player2 = playersGroup.PlayerByHint(player2Hint);
 
-            // Player validations:
-
-            // 1) teams or players exist.
-            if (player1 == null || player2 == null)
-            {
-                var message = await botClient.SendTextMessageAsync(
-                    chatId: e.Message.Chat,
-                    text: $"no encontré alguno de estos equipos: {player1Hint}, {player2Hint}",
-                    parseMode: ParseMode.Default,
-                    disableNotification: true,
-                    replyToMessageId: e.Message.MessageId);
-                return;
-            }
-
-            // 2) Players are different.
+            // 2) Players must be different.
             if (player1 == player2)
             {
                 var message = await botClient.SendTextMessageAsync(
@@ -205,27 +213,16 @@
                     parseMode: ParseMode.Default,
                     disableNotification: true,
                     replyToMessageId: e.Message.MessageId);
-                return;
-            }
 
-            // 3) Players belong to the same group.
-            if (player1.Group != player2.Group)
-            {
-                var message = await botClient.SendTextMessageAsync(
-                    chatId: e.Message.Chat,
-                    text: $"Buen intento, pero solo acepto partidos de equipos del mismo grupo :P",
-                    parseMode: ParseMode.Default,
-                    disableNotification: true,
-                    replyToMessageId: e.Message.MessageId);
                 return;
             }
 
             // Everything is correct at this point, go ahead and update the group.
-            action(player1, player1Goals, player2Goals);
-            action(player2, player2Goals, player1Goals);
+            match(player1, player1Goals, player2Goals);
+            match(player2, player2Goals, player1Goals);
 
             // saves the group (player1.Group should be the same as player2.Group at this point)
-            groupsRepository.Save(player1.Group);
+            groupsRepository.Save(playersGroup);
 
             // confirmation message
             var confirmationMessage = await botClient.SendTextMessageAsync(
@@ -246,7 +243,7 @@
 
             foreach (var player in group.Players)
             {
-                text += (player.Name.Length > 3 ? player.Name.Substring(0, 3) 
+                text += (player.Name.Length > 3 ? player.Name.Substring(0, 3)
                             : player.Name.PadRight(3)) + "|";
                 text += $"{player.Points}".PadLeft(2) + "|";
                 text += $"{player.TotalGames}".PadLeft(2) + "|";
