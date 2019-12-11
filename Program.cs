@@ -54,7 +54,7 @@
             {
                 Console.WriteLine(e.Message.Text);
 
-                if (e.Message.Text == null)
+                if (string.IsNullOrWhiteSpace(e.Message.Text))
                 {
                     return;
                 }
@@ -62,17 +62,14 @@
                 if (e.Message.Text.StartsWith("/tabla"))
                 {
                     await TablasCommand(e);
-                    return;
                 }
                 else if (e.Message.Text.StartsWith("/marcador"))
                 {
                     await MarcadorCommand(e);
-                    return;
                 }
                 else if(e.Message.Text.StartsWith("/borrar"))
                 {
                     await BorrarCommand(e);
-                    return;
                 }
             }
             catch (Exception ex)
@@ -99,7 +96,7 @@
             {
                 if (selectedGroups.Contains(group.Name))
                 {
-                    var message = await botClient.SendTextMessageAsync(
+                    _ = await botClient.SendTextMessageAsync(
                         chatId: e.Message.Chat,
                         text: GroupTableMessage(group),
                         parseMode: ParseMode.Markdown,
