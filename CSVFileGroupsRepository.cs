@@ -33,7 +33,7 @@
             return group;
         }
 
-        public void Save(Group group) => 
+        public void Save(Group group) =>
             File.WriteAllLines(FilePath(group.Name), group.Players.Select(CSV).ToArray());
 
         /// <summary>
@@ -45,7 +45,7 @@
         ///     - b.csv
         /// will return "a" and "b" ordered alphabetically.
         /// </summary>
-        private IOrderedEnumerable<string> GroupNames() => 
+        private IOrderedEnumerable<string> GroupNames() =>
             Directory
                 .GetFiles(_folderPath, "*" + csvExtension)
                 .Select(Path.GetFileNameWithoutExtension)
@@ -55,7 +55,7 @@
         /// Returns the FilePath for a group based on its name
         /// E.g. "a" will return "Groups/a.csv" (with _folderPath = "Groups")
         /// </summary>
-        private string FilePath(string groupName) => 
+        private string FilePath(string groupName) =>
             Path.Combine(_folderPath, groupName + csvExtension);
 
         private static Player Player(string csv) => Player(csv.Split(comma));
@@ -70,7 +70,7 @@
                 int.Parse(columns[5]),
                 int.Parse(columns[6]));
 
-        private static string CSV(Player player) => 
+        private static string CSV(Player player) =>
             string.Join(
                 comma,
                 player.Name,

@@ -8,7 +8,7 @@ namespace MilkshakeCup.Commands
     {
         // TODO this is a duplication of the MatchCommand changing online the player method invoked
         // revert instead of match. A way to reutilize code is needed.
-       public static async Task Execute(MilkshakeCupCommandContext context)
+        public static async Task Execute(MilkshakeCupCommandContext context)
         {
             if (context.Parameters.Length != 5)
             {
@@ -100,8 +100,8 @@ namespace MilkshakeCup.Commands
             }
 
             // Everything is correct at this point, go ahead and update the group.
-            player1.Erase(player1Goals, player2Goals);
-            player2.Erase(player2Goals, player1Goals);
+            player1.Revert(player1Goals, player2Goals);
+            player2.Revert(player2Goals, player1Goals);
             context.GroupsRepository.Save(playersGroup);
 
             // confirmation message

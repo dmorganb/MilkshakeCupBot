@@ -1,6 +1,8 @@
 namespace MilkshakeCup
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using MilkshakeCup.Commands;
     using MilkshakeCup.Models;
@@ -11,7 +13,7 @@ namespace MilkshakeCup
     {
         private readonly IGroupsRepository _groupsRepository;
 
-        public MilkshakeCupTelegramBotClient(string token, IGroupsRepository groupsRepository) 
+        public MilkshakeCupTelegramBotClient(string token, IGroupsRepository groupsRepository)
             : base(token)
         {
             _groupsRepository = groupsRepository;
@@ -29,35 +31,14 @@ namespace MilkshakeCup
 
                 Console.WriteLine(e.Message.Text);
 
-                Func<MilkshakeCupCommandContext, Task> command;
+                var selectedCommandInfo = AvailableCommands().FirstOrDefault(
+                    commandInfo => e.Message.Text.StartsWith(commandInfo.Key));
 
-                if (e.Message.Text.StartsWith("/tablas"))
+                if (!selectedCommandInfo.Equals(NotFound()))
                 {
-                    command = GroupsCommand.Execute;
-                }
-                else if (e.Message.Text.StartsWith("/tabla"))
-                {
-                    command = SingleGroupCommand.Execute;                    
-                }
-                else if (e.Message.Text.StartsWith("/marcador"))
-                {
-                    command = MatchCommand.Execute;
-                }
-                else if (e.Message.Text.StartsWith("/borrar"))
-                {
-                    command = RevertCommand.Execute;
-                }
-                else
-                {
-                    command = NotFoundCommand.Execute;
+                    await selectedCommandInfo.Value(Context(sender, e));
                 }
 
-                await command(new MilkshakeCupCommandContext(
-                    _groupsRepository,
-                    this,
-                    e,
-                    sender,
-                    e.Message.Text.Split(' ')));
             }
             catch (Exception ex)
             {
@@ -66,5 +47,25 @@ namespace MilkshakeCup
                 Console.WriteLine(ex.StackTrace);
             }
         }
+
+        private static Dictionary<string, Func<MilkshakeCupCommandContext, Task>> AvailableCommands() =>
+            new Dictionary<string, Func<MilkshakeCupCommandContext, Task>>
+            {
+                { "/tablas", GroupsCommand.Execute },
+                { "/tabla", SingleGroupCommand.Execute },
+                { "/marcador", MatchCommand.Execute },
+                { "/borrar", RevertCommand.Execute }
+            };
+
+        private static KeyValuePair<string, Func<MilkshakeCupCommandContext, Task>> NotFound() =>
+            default(KeyValuePair<string, Func<MilkshakeCupCommandContext, Task>>);
+
+        private MilkshakeCupCommandContext Context(object sender, MessageEventArgs e) =>
+            new MilkshakeCupCommandContext(
+                _groupsRepository,
+                this,
+                e,
+                sender,
+                e.Message.Text.Split(' '));
     }
 }

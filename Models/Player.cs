@@ -61,7 +61,7 @@ namespace MilkshakeCup.Models
             GoalsAgainst += goalsAgainst;
         }
 
-        public void Erase(int goalsInFavor, int goalsAgainst)
+        public void Revert(int goalsInFavor, int goalsAgainst)
         {
             if (goalsInFavor > goalsAgainst)
             {

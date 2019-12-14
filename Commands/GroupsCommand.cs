@@ -3,7 +3,6 @@ namespace MilkshakeCup.Commands
     using System.Threading.Tasks;
     using MilkshakeCup.Models;
     using Telegram.Bot.Types;
-    using Telegram.Bot.Types.Enums;
 
     public static class GroupsCommand
     {
@@ -11,25 +10,11 @@ namespace MilkshakeCup.Commands
         {
             foreach (var group in context.GroupsRepository.Groups())
             {
-                await SendGroupAsMarkdownTextMessage(context, group);
+                await context.SendMarkdownMessage(GroupAsMarkdown(group));
             }
         }
 
-        public static async Task<Message> SendGroupAsMarkdownTextMessage(
-            MilkshakeCupCommandContext context, 
-            Group group)
-        {
-            var message = await context.TelegramBotClient.SendTextMessageAsync(
-                chatId: context.MessageEventArgs.Message.Chat,
-                text: GroupAsMarkdown(group),
-                parseMode: ParseMode.Markdown,
-                disableNotification: true,
-                replyToMessageId: context.MessageEventArgs.Message.MessageId);
-            
-            return message;
-        }
-
-        private static string GroupAsMarkdown(Group group)
+        public static string GroupAsMarkdown(Group group)
         {
             if (group == null)
             {

@@ -8,7 +8,7 @@ namespace MilkshakeCup.Commands
     {
         public IGroupsRepository GroupsRepository { get; private set; }
 
-        public ITelegramBotClient TelegramBotClient  { get; private set; }
+        public ITelegramBotClient TelegramBotClient { get; private set; }
 
         public MessageEventArgs MessageEventArgs { get; private set; }
 
@@ -29,5 +29,5 @@ namespace MilkshakeCup.Commands
             Sender = sender;
             Parameters = parameters;
         }
-    }    
+    }
 }
