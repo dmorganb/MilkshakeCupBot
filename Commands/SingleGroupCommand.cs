@@ -8,7 +8,7 @@ namespace MilkshakeCup.Commands
         {
             var groupName = context.Parameters.Length == 2 ? context.Parameters[1] : "";
             var group = context.GroupsRepository.Group(groupName);
-            await context.SendMarkdownMessage(GroupsCommand.GroupAsMarkdown(group));
+            await context.SendMarkdownMessage(group.AsMarkdown());
         }
     }
 }

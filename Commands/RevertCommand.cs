@@ -2,7 +2,6 @@ namespace MilkshakeCup.Commands
 {
     using System.Linq;
     using System.Threading.Tasks;
-    using Telegram.Bot.Types.Enums;
 
     public static class RevertCommand
     {
@@ -12,13 +11,7 @@ namespace MilkshakeCup.Commands
         {
             if (context.Parameters.Length != 5)
             {
-                var message = await context.TelegramBotClient.SendTextMessageAsync(
-                    chatId: context.MessageEventArgs.Message.Chat,
-                    text: "Marcador debe llevar: equipo goles equipo goles\nPor ejemplo: Atletico 1 Eibar 0",
-                    parseMode: ParseMode.Default,
-                    disableNotification: true,
-                    replyToMessageId: context.MessageEventArgs.Message.MessageId);
-
+                var message = await context.SendMessage("Marcador debe llevar: equipo goles equipo goles\nPor ejemplo: Atletico 1 Eibar 0");
                 return;
             }
 
@@ -34,13 +27,7 @@ namespace MilkshakeCup.Commands
 
             if (playersGroup == null)
             {
-                var message = await context.TelegramBotClient.SendTextMessageAsync(
-                    chatId: context.MessageEventArgs.Message.Chat,
-                    text: $"no encontré un grupo con: {player1Hint}, {player2Hint}",
-                    parseMode: ParseMode.Default,
-                    disableNotification: true,
-                    replyToMessageId: context.MessageEventArgs.Message.MessageId);
-
+                var message = await context.SendMessage($"no encontré un grupo con: {player1Hint}, {player2Hint}");
                 return;
             }
 
@@ -58,13 +45,7 @@ namespace MilkshakeCup.Commands
             // 1) goals reported are valid scores
             if (player1Goals < 0 || player2Goals < 0)
             {
-                var message = await context.TelegramBotClient.SendTextMessageAsync(
-                    chatId: context.MessageEventArgs.Message.Chat,
-                    text: $"Alguno de estos marcadores esta mamando: {context.Parameters[2]}, {context.Parameters[4]}",
-                    parseMode: ParseMode.Default,
-                    disableNotification: true,
-                    replyToMessageId: context.MessageEventArgs.Message.MessageId);
-
+                var message = await context.SendMessage($"Alguno de estos marcadores esta mamando: {context.Parameters[2]}, {context.Parameters[4]}");
                 return;
             }
 
@@ -73,13 +54,7 @@ namespace MilkshakeCup.Commands
             // 2) no one should score more than 10 goals (possible but not probable)
             if (player1Goals > goalsThreshold || player2Goals > goalsThreshold)
             {
-                var message = await context.TelegramBotClient.SendTextMessageAsync(
-                    chatId: context.MessageEventArgs.Message.Chat,
-                    text: $"Mejor vuelvan a jugarlo, pero esta vez con todos los controles encendidos",
-                    parseMode: ParseMode.Default,
-                    disableNotification: true,
-                    replyToMessageId: context.MessageEventArgs.Message.MessageId);
-
+                var message = await context.SendMessage("Mejor vuelvan a jugarlo, pero esta vez con todos los controles encendidos");
                 return;
             }
 
@@ -89,13 +64,7 @@ namespace MilkshakeCup.Commands
             // 2) Players must be different.
             if (player1 == player2)
             {
-                var message = await context.TelegramBotClient.SendTextMessageAsync(
-                    chatId: context.MessageEventArgs.Message.Chat,
-                    text: $"Diay, jugó solo?",
-                    parseMode: ParseMode.Default,
-                    disableNotification: true,
-                    replyToMessageId: context.MessageEventArgs.Message.MessageId);
-
+                var message = await context.SendMessage("Diay, jugó solo?");
                 return;
             }
 
@@ -105,12 +74,7 @@ namespace MilkshakeCup.Commands
             context.GroupsRepository.Save(playersGroup);
 
             // confirmation message
-            var confirmationMessage = await context.TelegramBotClient.SendTextMessageAsync(
-                chatId: context.MessageEventArgs.Message.Chat,
-                text: $"Anotado!",
-                parseMode: ParseMode.Default,
-                disableNotification: true,
-                replyToMessageId: context.MessageEventArgs.Message.MessageId);
+            var confirmationMessage = await context.SendMessage("Anotado!");
         }
     }
 }

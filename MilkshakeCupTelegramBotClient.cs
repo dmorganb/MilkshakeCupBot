@@ -24,15 +24,17 @@ namespace MilkshakeCup
         {
             try
             {
-                if (e?.Message?.Text == null)
+                var text = e?.Message?.Text;
+
+                if (text == null)
                 {
                     return;
                 }
 
-                Console.WriteLine(e.Message.Text);
+                Console.WriteLine(text);
 
                 var selectedCommandInfo = AvailableCommands().FirstOrDefault(
-                    commandInfo => e.Message.Text.StartsWith(commandInfo.Key));
+                    commandInfo => text.StartsWith(commandInfo.Key));
 
                 if (!selectedCommandInfo.Equals(NotFound()))
                 {

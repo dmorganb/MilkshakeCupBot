@@ -2,7 +2,6 @@ namespace MilkshakeCup.Commands
 {
     using System.Threading.Tasks;
     using MilkshakeCup.Models;
-    using Telegram.Bot.Types;
 
     public static class GroupsCommand
     {
@@ -10,11 +9,11 @@ namespace MilkshakeCup.Commands
         {
             foreach (var group in context.GroupsRepository.Groups())
             {
-                await context.SendMarkdownMessage(GroupAsMarkdown(group));
+                await context.SendMarkdownMessage(group.AsMarkdown());
             }
         }
 
-        public static string GroupAsMarkdown(Group group)
+        public static string AsMarkdown(this Group group)
         {
             if (group == null)
             {
