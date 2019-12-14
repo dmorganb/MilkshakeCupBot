@@ -4,3 +4,4 @@ Groups/
 appSettings.json
 g_credentials.json
 .credentials/
+.DS_Store
