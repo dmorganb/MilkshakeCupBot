@@ -5,7 +5,7 @@ namespace MilkshakeCup.Commands
 
     public static class GroupsCommand
     {
-        public static async Task Execute(MilkshakeCupCommandContext context)
+        public static async Task Execute(CommandContext context)
         {
             foreach (var group in context.GroupsRepository.Groups())
             {

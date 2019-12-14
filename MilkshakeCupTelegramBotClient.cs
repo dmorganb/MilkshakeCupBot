@@ -3,14 +3,25 @@ namespace MilkshakeCup
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Threading.Tasks;
     using MilkshakeCup.Commands;
     using MilkshakeCup.Models;
     using Telegram.Bot;
     using Telegram.Bot.Args;
+    using CommandInfo = System.Collections.Generic.KeyValuePair<string, Commands.Command>;
 
     public class MilkshakeCupTelegramBotClient : TelegramBotClient
     {
+        private static readonly Dictionary<string, Command> _commands =
+            new Dictionary<string, Command>
+            {
+                { "/tablas", GroupsCommand.Execute },
+                { "/tabla", SingleGroupCommand.Execute },
+                { "/marcador", MatchCommand.Execute },
+                { "/borrar", RevertCommand.Execute }
+            };
+
+        private static readonly CommandInfo _notFound = default(CommandInfo);
+
         private readonly IGroupsRepository _groupsRepository;
 
         public MilkshakeCupTelegramBotClient(string token, IGroupsRepository groupsRepository)
@@ -24,23 +35,11 @@ namespace MilkshakeCup
         {
             try
             {
-                var text = e?.Message?.Text;
-
-                if (text == null)
+                if (!CommandInfo(e).Equals(_notFound))
                 {
-                    return;
+                    var command = CommandInfo(e).Value;
+                    await command(CommandContext(sender, e));
                 }
-
-                Console.WriteLine(text);
-
-                var selectedCommandInfo = AvailableCommands().FirstOrDefault(
-                    commandInfo => text.StartsWith(commandInfo.Key));
-
-                if (!selectedCommandInfo.Equals(NotFound()))
-                {
-                    await selectedCommandInfo.Value(Context(sender, e));
-                }
-
             }
             catch (Exception ex)
             {
@@ -50,24 +49,17 @@ namespace MilkshakeCup
             }
         }
 
-        private static Dictionary<string, Func<MilkshakeCupCommandContext, Task>> AvailableCommands() =>
-            new Dictionary<string, Func<MilkshakeCupCommandContext, Task>>
-            {
-                { "/tablas", GroupsCommand.Execute },
-                { "/tabla", SingleGroupCommand.Execute },
-                { "/marcador", MatchCommand.Execute },
-                { "/borrar", RevertCommand.Execute }
-            };
+        private static CommandInfo CommandInfo(MessageEventArgs e) =>
+             _commands.FirstOrDefault(commandInfo => Text(e).StartsWith(commandInfo.Key));
 
-        private static KeyValuePair<string, Func<MilkshakeCupCommandContext, Task>> NotFound() =>
-            default(KeyValuePair<string, Func<MilkshakeCupCommandContext, Task>>);
+        private static string Text(MessageEventArgs e) => e?.Message?.Text ?? "";
 
-        private MilkshakeCupCommandContext Context(object sender, MessageEventArgs e) =>
-            new MilkshakeCupCommandContext(
+        private CommandContext CommandContext(object sender, MessageEventArgs e) =>
+            new CommandContext(
                 _groupsRepository,
                 this,
                 e,
                 sender,
-                e.Message.Text.Split(' '));
+                Text(e).Split(' '));
     }
 }

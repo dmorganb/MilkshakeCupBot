@@ -7,7 +7,7 @@ namespace MilkshakeCup.Commands
     {
         // TODO a lot of these validations are "business logic" and should be in the "domain model"
         // (maybe a Group.Match(Player, Player, Score)) or something like that . . . 
-        public static async Task Execute(MilkshakeCupCommandContext context)
+        public static async Task Execute(CommandContext context)
         {
             if (context.Parameters.Length != 5)
             {

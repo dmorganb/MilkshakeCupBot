@@ -7,7 +7,7 @@ namespace MilkshakeCup.Commands
     {
         // TODO this is a duplication of the MatchCommand changing online the player method invoked
         // revert instead of match. A way to reutilize code is needed.
-        public static async Task Execute(MilkshakeCupCommandContext context)
+        public static async Task Execute(CommandContext context)
         {
             if (context.Parameters.Length != 5)
             {

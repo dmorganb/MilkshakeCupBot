@@ -1,10 +1,13 @@
 namespace MilkshakeCup.Commands
 {
+    using System.Threading.Tasks;
     using MilkshakeCup.Models;
     using Telegram.Bot;
     using Telegram.Bot.Args;
 
-    public class MilkshakeCupCommandContext
+    public delegate Task Command(CommandContext context);
+
+    public class CommandContext
     {
         public IGroupsRepository GroupsRepository { get; private set; }
 
@@ -16,7 +19,7 @@ namespace MilkshakeCup.Commands
 
         public string[] Parameters { get; private set; }
 
-        public MilkshakeCupCommandContext(
+        public CommandContext(
             IGroupsRepository groupsRepository,
             ITelegramBotClient telegramBotClient,
             MessageEventArgs messageEventArgs,

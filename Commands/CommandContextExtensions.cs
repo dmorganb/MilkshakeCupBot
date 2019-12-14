@@ -4,10 +4,10 @@ namespace MilkshakeCup.Commands
     using Telegram.Bot.Types;
     using Telegram.Bot.Types.Enums;
 
-    public static class MilkshakeCupCommandContextExtensions
+    public static class CommandContextExtensions
     {
         public static async Task<Message> SendMessage(
-            this MilkshakeCupCommandContext context,
+            this CommandContext context,
             string text)
         {
             var message = await context.TelegramBotClient.SendTextMessageAsync(
@@ -21,7 +21,7 @@ namespace MilkshakeCup.Commands
         }
 
         public static async Task<Message> SendMarkdownMessage(
-            this MilkshakeCupCommandContext context,
+            this CommandContext context,
             string markdownText)
         {
             var message = await context.TelegramBotClient.SendTextMessageAsync(
