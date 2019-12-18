@@ -31,14 +31,14 @@ namespace MilkshakeCup
             OnMessage += HandleCommand;
         }
 
-        private async void HandleCommand(object sender, MessageEventArgs e)
+        private async void HandleCommand(object sender, MessageEventArgs eventArgs)
         {
             try
             {
-                if (!CommandInfo(e).Equals(_notFound))
+                if (!CommandInfo(eventArgs).Equals(_notFound))
                 {
-                    var command = CommandInfo(e).Value;
-                    await command(CommandContext(sender, e));
+                    var command = CommandInfo(eventArgs).Value;
+                    await command(CommandContext(sender, eventArgs));
                 }
             }
             catch (Exception ex)
@@ -49,17 +49,17 @@ namespace MilkshakeCup
             }
         }
 
-        private static CommandInfo CommandInfo(MessageEventArgs e) =>
-             _commands.FirstOrDefault(commandInfo => Text(e).StartsWith(commandInfo.Key));
+        private static CommandInfo CommandInfo(MessageEventArgs eventArgs) =>
+             _commands.FirstOrDefault(commandInfo => Text(eventArgs).StartsWith(commandInfo.Key));
 
         private static string Text(MessageEventArgs e) => e?.Message?.Text ?? "";
 
-        private CommandContext CommandContext(object sender, MessageEventArgs e) =>
+        private CommandContext CommandContext(object sender, MessageEventArgs eventArgs) =>
             new CommandContext(
                 _groupsRepository,
                 this,
-                e,
+                eventArgs,
                 sender,
-                Text(e).Split(' '));
+                Text(eventArgs).Split(' '));
     }
 }

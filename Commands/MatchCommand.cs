@@ -11,7 +11,7 @@ namespace MilkshakeCup.Commands
         {
             if (context.Parameters.Length != 5)
             {
-                var message = await context.SendMessage("Marcador debe llevar: equipo goles equipo goles\nPor ejemplo: Atletico 1 Eibar 0");
+                await context.SendMessage("Marcador debe llevar: equipo goles equipo goles\nPor ejemplo: Atletico 1 Eibar 0");
                 return;
             }
 
@@ -27,34 +27,31 @@ namespace MilkshakeCup.Commands
 
             if (playersGroup == null)
             {
-                var message = await context.SendMessage($"no encontré un grupo con: {player1Hint}, {player2Hint}");
+                await context.SendMessage($"no encontré un grupo con: {player1Hint}, {player2Hint}");
                 return;
             }
 
-            // score validations            
+            // score validations    
+            // 1) goals reported are valid scores        
             if (!int.TryParse(context.Parameters[2], out player1Goals))
             {
-                player1Goals = -1;
+                await context.SendMessage($"Este marcador esta mamando: {context.Parameters[2]}");
+                return;
             }
 
             if (!int.TryParse(context.Parameters[4], out player2Goals))
             {
-                player2Goals = -1;
-            }
-
-            // 1) goals reported are valid scores
-            if (player1Goals < 0 || player2Goals < 0)
-            {
-                var message = await context.SendMessage($"Alguno de estos marcadores esta mamando: {context.Parameters[2]}, {context.Parameters[4]}");
+                await context.SendMessage($"Este marcador esta mamando: {context.Parameters[4]}");
                 return;
             }
 
-            const int goalsThreshold = 10; // if someone scored more than 10 in the same game, that's suspicious.
+            // if someone scored more than 10 in the same game, that's suspicious.
+            const int goalsThreshold = 10; 
 
             // 2) no one should score more than 10 goals (possible but not probable)
             if (player1Goals > goalsThreshold || player2Goals > goalsThreshold)
             {
-                var message = await context.SendMessage("Mejor vuelvan a jugarlo, pero esta vez con todos los controles encendidos");
+                await context.SendMessage("Mejor vuelvan a jugarlo, pero esta vez con todos los controles encendidos");
                 return;
             }
 
@@ -64,7 +61,7 @@ namespace MilkshakeCup.Commands
             // 2) Players must be different.
             if (player1 == player2)
             {
-                var message = await context.SendMessage("Diay, jugó solo?");
+                await context.SendMessage("Diay, jugó solo?");
                 return;
             }
 
@@ -74,7 +71,7 @@ namespace MilkshakeCup.Commands
             context.GroupsRepository.Save(playersGroup);
 
             // confirmation message
-            var confirmationMessage = await context.SendMessage("Anotado!");
+            await context.SendMessage("Anotado!");
         }
     }
 }

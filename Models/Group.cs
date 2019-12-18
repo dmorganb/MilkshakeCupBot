@@ -29,7 +29,7 @@ namespace MilkshakeCup.Models
         }
 
         /// <summary>
-        /// Search a player in the group by a hint.
+        /// Search for a player in the group by a hint.
         /// hint can be the name of the player or the team.
         /// </summary>
         public Player PlayerByHint(string hint) =>
