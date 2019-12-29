@@ -37,8 +37,7 @@ namespace MilkshakeCup
             {
                 if (!CommandInfo(eventArgs).Equals(_notFound))
                 {
-                    var command = CommandInfo(eventArgs).Value;
-                    await command(CommandContext(sender, eventArgs));
+                    await CommandInfo(eventArgs).Value(CommandContext(sender, eventArgs));
                 }
             }
             catch (Exception ex)

@@ -15,7 +15,7 @@ namespace MilkshakeCup.Commands
 
         public MessageEventArgs MessageEventArgs { get; private set; }
 
-        public object Sender { get; set; }
+        public object Sender { get; private set; }
 
         public string[] Parameters { get; private set; }
 
