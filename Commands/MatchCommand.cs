@@ -71,7 +71,7 @@ namespace MilkshakeCup.Commands
             context.GroupsRepository.Save(playersGroup);
 
             // confirmation message
-            await context.SendMessage("Anotado!");
+            await context.SendMarkdownMessage("Anotado!\n\n" + playersGroup.AsMarkdown());
         }
     }
 }
