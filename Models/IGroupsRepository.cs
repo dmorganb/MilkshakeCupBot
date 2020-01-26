@@ -1,7 +1,5 @@
 namespace MilkshakeCup.Models
 {
-    using System.Collections.Generic;
-
     public interface IGroupsRepository
     {
         Group[] Groups();

@@ -2,28 +2,16 @@
 {
     using System;
     using System.IO;
-    using System.Threading.Tasks;
     using Microsoft.Extensions.Configuration;
 
     public class Program
     {
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
-            // app settings
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appSettings.json", optional: true, reloadOnChange: true);
-            var configuration = builder.Build();
+            var bot = CreateBotClient();
+            bot.StartReceiving();
 
-            // bot client
-            var botClient = new MilkshakeCupTelegramBotClient(
-                configuration["token"],
-                new CSVFileGroupsRepository("Groups"));
-            botClient.StartReceiving();
-
-            // intro
-            var me = await botClient.GetMeAsync();
-            Console.WriteLine($"Hello, World! I am user {me.Id} and my name is {me.FirstName}.");
+            Console.WriteLine($"MilkshakeCup Bot up and running!");
             Console.WriteLine("Press esc to exit");
 
             ConsoleKeyInfo input;
@@ -33,6 +21,19 @@
                 input = Console.ReadKey();
             }
             while (input.Key != ConsoleKey.Escape);
+
+            bot.StopReceiving();
         }
+
+        private static MilkshakeCupTelegramBotClient CreateBotClient() =>
+            new MilkshakeCupTelegramBotClient(
+                Configuration()["token"],
+                new CSVFileGroupsRepository("Groups"));
+
+        private static IConfigurationRoot Configuration() =>
+            new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appSettings.json")
+                .Build();
     }
 }
