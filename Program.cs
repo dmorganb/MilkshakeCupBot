@@ -14,7 +14,7 @@
             Console.WriteLine($"MilkshakeCup Bot up and running!");
             Console.WriteLine("Press esc to exit");
 
-            for (var key = Console.ReadKey(); !IsEsc(key); key = Console.ReadKey()) ;
+            while(Console.ReadKey().Key != ConsoleKey.Escape) ;
 
             bot.StopReceiving();
         }
@@ -29,7 +29,5 @@
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appSettings.json")
                 .Build();
-
-        private static bool IsEsc(ConsoleKeyInfo keyInfo) => keyInfo.Key == ConsoleKey.Escape;
     }
 }
