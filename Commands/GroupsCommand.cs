@@ -7,10 +7,14 @@ namespace MilkshakeCup.Commands
     {
         public static async Task Execute(CommandContext context)
         {
+            var message = "";
+
             foreach (var group in context.GroupsRepository.Groups())
             {
-                await context.SendMarkdownMessage(group.AsMarkdown());
+                message += group.AsMarkdown() + "\n\n";
             }
+
+            await context.SendMarkdownMessage(message);
         }
 
         public static string AsMarkdown(this Group group)
