@@ -14,7 +14,7 @@
             Console.WriteLine($"MilkshakeCup Bot up and running!");
             Console.WriteLine("Press esc to exit");
 
-            while(Console.ReadKey().Key != ConsoleKey.Escape) ;
+            while (Console.ReadKey().Key != ConsoleKey.Escape) ;
 
             bot.StopReceiving();
         }

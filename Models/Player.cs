@@ -6,32 +6,32 @@ namespace MilkshakeCup.Models
 
         public string Team { get; }
 
-        public int Points => (Won * 3) + Draw;
+        public ushort Points => (ushort)((Won * 3) + Draw);
 
-        public int TotalGames => Won + Lost + Draw;
+        public ushort TotalGames => (ushort)(Won + Lost + Draw);
 
-        public int Won { get; private set; }
+        public ushort Won { get; private set; }
 
-        public int Draw { get; private set; }
+        public ushort Draw { get; private set; }
 
-        public int Lost { get; private set; }
+        public ushort Lost { get; private set; }
 
-        public int GoalsInFavor { get; private set; }
+        public ushort GoalsInFavor { get; private set; }
 
-        public int GoalsAgainst { get; private set; }
+        public ushort GoalsAgainst { get; private set; }
 
-        public int GoalDifference => GoalsInFavor - GoalsAgainst;
+        public ushort GoalDifference => (ushort)(GoalsInFavor - GoalsAgainst);
 
         public Group Group { get; internal set; }
 
         public Player(
             string player,
             string team,
-            int won,
-            int draw,
-            int lost,
-            int goalsInFavor,
-            int goalsAgainst)
+            ushort won,
+            ushort draw,
+            ushort lost,
+            ushort goalsInFavor,
+            ushort goalsAgainst)
         {
             Name = player;
             Team = team;
@@ -42,7 +42,7 @@ namespace MilkshakeCup.Models
             GoalsAgainst = goalsAgainst;
         }
 
-        public void Match(int goalsInFavor, int goalsAgainst)
+        public void Match(ushort goalsInFavor, ushort goalsAgainst)
         {
             if (goalsInFavor > goalsAgainst)
             {
@@ -61,7 +61,7 @@ namespace MilkshakeCup.Models
             GoalsAgainst += goalsAgainst;
         }
 
-        public void Revert(int goalsInFavor, int goalsAgainst)
+        public void Revert(ushort goalsInFavor, ushort goalsAgainst)
         {
             if (goalsInFavor > goalsAgainst)
             {

@@ -64,11 +64,11 @@
             new Player(
                 columns[0],
                 columns[1],
-                int.Parse(columns[2]),
-                int.Parse(columns[3]),
-                int.Parse(columns[4]),
-                int.Parse(columns[5]),
-                int.Parse(columns[6]));
+                ushort.Parse(columns[2]),
+                ushort.Parse(columns[3]),
+                ushort.Parse(columns[4]),
+                ushort.Parse(columns[5]),
+                ushort.Parse(columns[6]));
 
         private static string CSV(Player player) =>
             string.Join(

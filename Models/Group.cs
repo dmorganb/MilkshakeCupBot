@@ -34,5 +34,7 @@ namespace MilkshakeCup.Models
         /// </summary>
         public Player PlayerByHint(string hint) =>
             _players.FirstOrDefault(x => x.Team.StartsWith(hint) || x.Name.Contains(hint));
+
+        public bool HasPlayer(string hint) => PlayerByHint(hint) != null;
     }
 }

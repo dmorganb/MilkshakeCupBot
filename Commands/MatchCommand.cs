@@ -2,23 +2,42 @@ namespace MilkshakeCup.Commands
 {
     using System.Linq;
     using System.Threading.Tasks;
+    using MilkshakeCup.Models;
 
     public static class MatchCommand
     {
-        // TODO a lot of these validations are "business logic" and should be in the "domain model"
-        // (maybe a Group.Match(Player, Player, Score)) or something like that . . . 
         public static async Task Execute(CommandContext context)
         {
-            if (context.Parameters.Length != 5)
+            var validMatch = context.CreateMatch();
+
+            if (validMatch.HasErrors)
             {
-                await context.SendMessage("Marcador debe llevar: equipo goles equipo goles\nPor ejemplo: Atletico 1 Eibar 0");
+                await context.SendMessage(validMatch.Errors.First());
                 return;
             }
 
+            // Everything is correct at this point, go ahead and update the group.
+            var match = validMatch.Value;
+            var matchGroup = match.Register();
+            context.GroupsRepository.Save(matchGroup);
+
+            // confirmation message
+            await context.SendMarkdownMessage("Anotado!\n\n" + matchGroup.AsMarkdown());
+        }
+
+        public static Valid<Match> CreateMatch(this CommandContext context)
+        {
+            var validMatch = new Valid<Match>();
+
+            if (context.Parameters.Length != 5)
+            {
+                validMatch.AddError("Marcador debe llevar: equipo goles equipo goles\nPor ejemplo: Atletico 1 Eibar 0");
+            }
+
             var player1Hint = context.Parameters[1]?.ToLower();
-            var player1Goals = -1;
+            ushort player1Goals;
             var player2Hint = context.Parameters[3]?.ToLower();
-            var player2Goals = -1;
+            ushort player2Goals;
 
             var playersGroup = context.GroupsRepository.Groups().FirstOrDefault(
                 group =>
@@ -27,32 +46,25 @@ namespace MilkshakeCup.Commands
 
             if (playersGroup == null)
             {
-                await context.SendMessage($"no encontré un grupo con: {player1Hint}, {player2Hint}");
-                return;
+                validMatch.AddError($"no encontré un grupo con: {player1Hint}, {player2Hint}");
             }
 
             // score validations    
             // 1) goals reported are valid scores        
-            if (!int.TryParse(context.Parameters[2], out player1Goals))
+            if (!ushort.TryParse(context.Parameters[2], out player1Goals))
             {
-                await context.SendMessage($"Este marcador esta mamando: {context.Parameters[2]}");
-                return;
+                validMatch.AddError($"Este marcador esta mamando: {context.Parameters[2]}");
             }
 
-            if (!int.TryParse(context.Parameters[4], out player2Goals))
+            if (!ushort.TryParse(context.Parameters[4], out player2Goals))
             {
-                await context.SendMessage($"Este marcador esta mamando: {context.Parameters[4]}");
-                return;
+                validMatch.AddError($"Este marcador esta mamando: {context.Parameters[4]}");
             }
-
-            // if someone scored more than 10 in the same game, that's suspicious.
-            const int goalsThreshold = 10; 
 
             // 2) no one should score more than 10 goals (possible but not probable)
-            if (player1Goals > goalsThreshold || player2Goals > goalsThreshold)
+            if (player1Goals > Score.GoalsThreshold || player2Goals > Score.GoalsThreshold)
             {
-                await context.SendMessage("Mejor vuelvan a jugarlo, pero esta vez con todos los controles encendidos");
-                return;
+                validMatch.AddError("Mejor vuelvan a jugarlo, pero esta vez con todos los controles encendidos");
             }
 
             var player1 = playersGroup.PlayerByHint(player1Hint);
@@ -61,17 +73,15 @@ namespace MilkshakeCup.Commands
             // 2) Players must be different.
             if (player1 == player2)
             {
-                await context.SendMessage("Diay, jugó solo?");
-                return;
+                validMatch.AddError("Diay, jugó solo?");
             }
 
-            // Everything is correct at this point, go ahead and update the group.
-            player1.Match(player1Goals, player2Goals);
-            player2.Match(player2Goals, player1Goals);
-            context.GroupsRepository.Save(playersGroup);
+            if (!validMatch.HasErrors)
+            {
+                validMatch = new Valid<Match>(new Match(new Score(player1, player1Goals), new Score(player2, player2Goals)));
+            }
 
-            // confirmation message
-            await context.SendMarkdownMessage("Anotado!\n\n" + playersGroup.AsMarkdown());
+            return validMatch;
         }
     }
 }
